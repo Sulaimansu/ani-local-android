@@ -1,0 +1,93 @@
+# Download this from https://graphql.anilist.co via introspection or CLI
+# Placeholder for build to pass. Run `./gradlew downloadApolloSchema` in real setup.
+schema {
+  query: Query
+}
+
+type Query {
+  Media(id: Int, search: String): Media
+  Page(page: Int, perPage: Int): Page
+}
+
+type Page {
+  media: [Media]
+}
+
+type Media {
+  id: Int!
+  title: MediaTitle
+  description: String
+  status: MediaStatus
+  episodes: Int
+  nextAiringEpisode: AiringSchedule
+  coverImage: MediaCoverImage
+  bannerImage: String
+  genres: [String]
+  tags: [MediaTag]
+  relations: MediaConnection
+  startDate: FuzzyDate
+  endDate: FuzzyDate
+}
+
+type MediaTitle {
+  romaji: String
+  english: String
+  native: String
+}
+
+type MediaCoverImage {
+  large: String
+  extraLarge: String
+  color: String
+}
+
+type AiringSchedule {
+  episode: Int
+  airingAt: Int
+  timeUntilAiring: Int
+}
+
+type MediaTag {
+  name: String
+  description: String
+  category: String
+}
+
+type MediaConnection {
+  edges: [MediaEdge]
+}
+
+type MediaEdge {
+  node: Media
+  relationType: MediaRelation
+}
+
+enum MediaStatus {
+  FINISHED
+  RELEASING
+  NOT_YET_RELEASED
+  CANCELLED
+  HIATUS
+}
+
+enum MediaRelation {
+  ADAPTATION
+  PREQUEL
+  SEQUEL
+  PARENT
+  SIDE_STORY
+  CHARACTER
+  SUMMARY
+  ALTERNATIVE
+  SPIN_OFF
+  OTHER
+  SOURCE
+  COMPILATION
+  CONTAINS
+}
+
+type FuzzyDate {
+  year: Int
+  month: Int
+  day: Int
+}

@@ -1,0 +1,54 @@
+package com.sulaiman.anilocal.di
+
+import android.content.Context
+import androidx.room.Room
+import com.apollographql.apollo.ApolloClient
+import com.sulaiman.anilocal.data.local.AnimeDao
+import com.sulaiman.anilocal.data.local.AniDatabase
+import com.sulaiman.anilocal.data.remote.AniListRepository
+import com.sulaiman.anilocal.data.repository.AnimeRepositoryImpl
+import com.sulaiman.anilocal.domain.repository.AnimeRepository
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideApolloClient(): ApolloClient {
+        return ApolloClient.Builder()
+            .serverUrl("https://graphql.anilist.co")
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): AniDatabase {
+        return Room.databaseBuilder(
+            context,
+            AniDatabase::class.java,
+            "ani_local_db"
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnimeDao(db: AniDatabase): AnimeDao = db.animeDao()
+
+    @Provides
+    @Singleton
+    fun provideAnimeRepository(
+        apolloClient: ApolloClient,
+        dao: AnimeDao
+    ): AnimeRepository {
+        return AnimeRepositoryImpl(apolloClient, dao)
+    }
+}

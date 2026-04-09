@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">AniLocal</string>
+    <string name="search_hint">Search AniList...</string>
+    <string name="library">Library</string>
+    <string name="browse">Browse</string>
+    <string name="status_watching">Watching</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_planning">Planning</string>
+    <string name="status_dropped">Dropped</string>
+    <string name="status_paused">Paused</string>
+    <string name="add_to_library">Add to Library</string>
+    <string name="next_episode">Next Ep</string>
+    <string name="airing_in">Airing in</string>
+    <string name="offline_ready">Offline Ready</string>
+    <string name="tags">Tags</string>
+    <string name="related">Related</string>
+    <string name="description">Description</string>
+</resources>
