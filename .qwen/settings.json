@@ -6,7 +6,12 @@
       "Bash(do)",
       "Bash(printf *)",
       "Bash(cp *)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(java *)",
+      "Bash(curl *)",
+      "Bash(chmod *)",
+      "Bash(file *)",
+      "Bash(git *)"
     ]
   },
   "$version": 3

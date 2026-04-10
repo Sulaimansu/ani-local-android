@@ -28,6 +28,7 @@ crashlytics.properties
 *.apk
 *.aab
 *.aar
+!gradle/wrapper/gradle-wrapper.jar
 *.jar
 *.war
 *.ear
