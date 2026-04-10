@@ -1,6 +1,7 @@
 package com.sulaiman.anilocal.presentation.screens.detail
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -436,9 +437,9 @@ fun FlowRow(
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     content: @Composable () -> Unit
 ) {
-    // Simple implementation - just use Row with wrap
+    val scrollState = rememberScrollState()
     Row(
-        modifier = modifier,
+        modifier = modifier.horizontalScroll(scrollState),
         horizontalArrangement = horizontalArrangement,
         verticalAlignment = Alignment.Top
     ) {
@@ -454,15 +455,18 @@ fun formatNumber(num: Int): String = when {
 
 fun parseRelationsJson(json: String): List<com.sulaiman.anilocal.domain.model.AnimeRelation> {
     return try {
-        kotlinx.serialization.json.Json.decodeFromString<List<Map<String, String>>>(json).map {
+        val element = kotlinx.serialization.json.Json.parseToJsonElement(json)
+        val arr = element.jsonArray
+        arr.map { obj ->
+            val map = obj.jsonObject
             com.sulaiman.anilocal.domain.model.AnimeRelation(
-                id = it["id"]?.toIntOrNull() ?: 0,
-                titleRomaji = it["title"] ?: "",
-                titleEnglish = it["titleEn"],
-                relationType = it["type"] ?: "",
-                coverImage = it["cover"],
-                status = it["status"],
-                format = it["format"]
+                id = (map["id"]?.jsonPrimitive?.contentOrNull)?.toIntOrNull() ?: 0,
+                titleRomaji = (map["title"]?.jsonPrimitive?.contentOrNull) ?: "",
+                titleEnglish = map["titleEn"]?.jsonPrimitive?.contentOrNull,
+                relationType = (map["type"]?.jsonPrimitive?.contentOrNull) ?: "",
+                coverImage = map["cover"]?.jsonPrimitive?.contentOrNull,
+                status = map["status"]?.jsonPrimitive?.contentOrNull,
+                format = map["format"]?.jsonPrimitive?.contentOrNull
             )
         }
     } catch (e: Exception) {

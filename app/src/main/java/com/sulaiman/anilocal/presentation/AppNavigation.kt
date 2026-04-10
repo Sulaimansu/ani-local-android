@@ -2,11 +2,6 @@ package com.sulaiman.anilocal.presentation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.LibraryBooks
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -14,23 +9,26 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.sulaiman.anilocal.R
 import com.sulaiman.anilocal.presentation.screens.airing.AiringScreen
 import com.sulaiman.anilocal.presentation.screens.library.LibraryScreen
 import com.sulaiman.anilocal.presentation.screens.search.SearchScreen
 import com.sulaiman.anilocal.presentation.screens.detail.AnimeDetailScreen
 
-sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    data object Library : Screen("library", "Library", Icons.Filled.LibraryBooks)
-    data object Search : Screen("search", "Search", Icons.Filled.Search)
-    data object Airing : Screen("airing", "Airing", Icons.Filled.CalendarMonth)
-    data object Detail : Screen("detail/{animeId}", "Details", Icons.Filled.LibraryBooks)
+sealed class Screen(
+    val route: String,
+    val title: String,
+    val iconText: String
+) {
+    data object Library : Screen("library", "Library", "📚")
+    data object Search : Screen("search", "Search", "🔍")
+    data object Airing : Screen("airing", "Airing", "📺")
+    data object Detail : Screen("detail/{animeId}", "Details", "ℹ️")
 
     companion object {
         val bottomNavScreens = listOf(Library, Search, Airing)
@@ -56,7 +54,7 @@ fun AppNavigation() {
                 NavigationBar {
                     Screen.bottomNavScreens.forEach { screen ->
                         NavigationBarItem(
-                            icon = { Icon(screen.icon, contentDescription = screen.title) },
+                            icon = { Text(screen.iconText, fontSize = 20.sp) },
                             label = { Text(screen.title) },
                             selected = currentRoute == screen.route,
                             onClick = {
