@@ -1,6 +1,7 @@
 package com.sulaiman.anilocal.data.local
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -22,12 +23,37 @@ interface AnimeDao {
     @Query("SELECT * FROM local_anime ORDER BY addedAt DESC")
     fun getAllAnime(): Flow<List<LocalAnime>>
 
-    @Query("SELECT * FROM local_anime WHERE status = :status ORDER BY addedAt DESC")
+    @Query("SELECT * FROM local_anime WHERE mediaStatus = :status ORDER BY addedAt DESC")
     fun getAnimeByStatus(status: String): Flow<List<LocalAnime>>
 
-    @Query("DELETE FROM local_anime WHERE id = :id")
-    suspend fun deleteAnime(id: Int)
+    @Query("SELECT * FROM local_anime WHERE mediaStatus IN ('RELEASING', 'NOT_YET_RELEASED') ORDER BY nextAiringTime ASC")
+    fun getReleasingAnime(): Flow<List<LocalAnime>>
 
-    @Query("UPDATE local_anime SET nextAiringTime = :time, nextEpisode = :ep WHERE id = :id")
-    suspend fun updateAiringInfo(id: Int, time: Long?, ep: Int?)
+    @Delete
+    suspend fun deleteAnime(anime: LocalAnime)
+
+    @Query("DELETE FROM local_anime WHERE id = :id")
+    suspend fun deleteAnimeById(id: Int)
+
+    @Query("UPDATE local_anime SET nextAiringTime = :nextAiringTime, nextEpisode = :nextEpisode, lastSyncedAt = :syncTime WHERE id = :id")
+    suspend fun updateAiringInfo(id: Int, nextAiringTime: Long?, nextEpisode: Int?, syncTime: Long = System.currentTimeMillis())
+
+    @Query("UPDATE local_anime SET mediaStatus = :status, episodes = :episodes, nextAiringTime = :nextAiringTime, nextEpisode = :nextEpisode, lastSyncedAt = :syncTime WHERE id = :id")
+    suspend fun updateAnimeMetadata(
+        id: Int,
+        status: String?,
+        episodes: Int?,
+        nextAiringTime: Long?,
+        nextEpisode: Int?,
+        syncTime: Long = System.currentTimeMillis()
+    )
+
+    @Query("SELECT * FROM local_anime WHERE mediaStatus = 'RELEASING' AND nextAiringTime IS NOT NULL AND nextAiringTime > 0 ORDER BY nextAiringTime ASC")
+    suspend fun getReleasingWithAiringInfo(): List<LocalAnime>
+
+    @Query("SELECT * FROM local_anime WHERE nextAiringTime IS NOT NULL AND nextAiringTime > :threshold AND nextAiringTime <= :upperBound ORDER BY nextAiringTime ASC")
+    suspend fun getAnimeAiringBetween(threshold: Long, upperBound: Long): List<LocalAnime>
+
+    @Query("SELECT COUNT(*) FROM local_anime")
+    suspend fun getAnimeCount(): Int
 }

@@ -1,17 +1,26 @@
-# Download this from https://graphql.anilist.co via introspection or CLI
-# Placeholder for build to pass. Run `./gradlew downloadApolloSchema` in real setup.
 schema {
   query: Query
 }
 
 type Query {
-  Media(id: Int, search: String): Media
   Page(page: Int, perPage: Int): Page
+  Media(id: Int, search: String, type: MediaType): Media
+  AiringSchedule(mediaId: Int, airingAt_greater: Int, airingAt_lesser: Int, sort: [AiringSort], perPage: Int): AiringConnection
+}
+
+enum AiringSort {
+  TIME
+  TIME_DESC
+  EPISODE
+  EPISODE_DESC
+  ID
+  ID_DESC
 }
 
 type Page {
   pageInfo: PageInfo
-  media(id: Int, type: MediaType, search: String): [Media]
+  media(id: Int, type: MediaType, search: String, status_in: [MediaStatus], sort: [MediaSort], season: MediaSeason, seasonYear: Int): [Media]
+  airingSchedules(mediaId: Int, airingAt_greater: Int, airingAt_lesser: Int, sort: [AiringSort], perPage: Int, page: Int): [AiringSchedule]
 }
 
 type PageInfo {
@@ -27,26 +36,79 @@ enum MediaType {
   MANGA
 }
 
+enum MediaSort {
+  TITLE_ROMAJI
+  TITLE_ENGLISH
+  TITLE_NATIVE
+  POPULARITY
+  POPULARITY_DESC
+  TRENDING
+  TRENDING_DESC
+  UPDATED_AT
+  UPDATED_AT_DESC
+  START_DATE
+  START_DATE_DESC
+  END_DATE
+  END_DATE_DESC
+  SCORE
+  SCORE_DESC
+  SCORE_AVERAGE
+  SCORE_AVERAGE_DESC
+  EPISODES
+  EPISODES_DESC
+  DURATION
+  DURATION_DESC
+  STATUS
+  STATUS_DESC
+}
+
+enum MediaSeason {
+  WINTER
+  SPRING
+  SUMMER
+  FALL
+}
+
 type Media {
   id: Int!
+  idMal: Int
   title: MediaTitle
   description: String
   status: MediaStatus
+  format: MediaFormat
   episodes: Int
+  duration: Int
+  season: MediaSeason
+  seasonYear: Int
+  startDate: FuzzyDate
+  endDate: FuzzyDate
   nextAiringEpisode: AiringSchedule
+  airingSchedule(airingAt_greater: Int, airingAt_lesser: Int): AiringSchedule
   coverImage: MediaCoverImage
   bannerImage: String
   genres: [String]
   tags: [MediaTag]
   relations: MediaConnection
-  startDate: FuzzyDate
-  endDate: FuzzyDate
+  studios(isMain: Boolean): StudioConnection
+  externalLinks: [MediaExternalLink]
+  trailer: MediaTrailer
+  averageScore: Int
+  meanScore: Int
+  popularity: Int
+  trending: Int
+  favourites: Int
+  isAdult: Boolean
+  siteUrl: String
+  autoCreateForumThread: Boolean
+  synonyms: [String]
+  source: MediaSource
 }
 
 type MediaTitle {
   romaji: String
   english: String
   native: String
+  userPreferred: String
 }
 
 type MediaCoverImage {
@@ -55,16 +117,12 @@ type MediaCoverImage {
   color: String
 }
 
-type AiringSchedule {
-  episode: Int
-  airingAt: Int
-  timeUntilAiring: Int
-}
-
 type MediaTag {
   name: String
   description: String
   category: String
+  rank: Int
+  isGeneralSpoiler: Boolean
 }
 
 type MediaConnection {
@@ -72,8 +130,75 @@ type MediaConnection {
 }
 
 type MediaEdge {
-  node: Media
+  id: Int
   relationType: MediaRelation
+  node: Media
+  role: StaffRole
+  voiceActors: [Staff]
+}
+
+type MediaExternalLink {
+  id: Int!
+  url: String
+  site: String
+  siteId: Int
+  type: String
+  language: String
+  color: String
+  icon: String
+  notes: String
+}
+
+type MediaTrailer {
+  id: String
+  site: String
+  thumbnail: String
+}
+
+type StudioConnection {
+  nodes: [Studio]
+}
+
+type Studio {
+  id: Int!
+  name: String!
+  siteUrl: String
+  isAnimationStudio: Boolean
+}
+
+type Staff {
+  id: Int!
+  name: StaffName
+  image: StaffImage
+  siteUrl: String
+}
+
+type StaffName {
+  full: String
+  native: String
+}
+
+type StaffImage {
+  large: String
+}
+
+enum StaffRole {
+  MAIN
+  SUPPORTING
+  BACKGROUND
+}
+
+enum MediaFormat {
+  TV
+  TV_SHORT
+  MOVIE
+  SPECIAL
+  OVA
+  ONA
+  MUSIC
+  MANGA
+  NOVEL
+  ONE_SHOT
 }
 
 enum MediaStatus {
@@ -82,6 +207,21 @@ enum MediaStatus {
   NOT_YET_RELEASED
   CANCELLED
   HIATUS
+}
+
+enum MediaSource {
+  ORIGINAL
+  MANGA
+  LIGHT_NOVEL
+  VISUAL_NOVEL
+  VIDEO_GAME
+  OTHER
+  NOVEL
+  DOUJINSHI
+  ANIME
+  WEB_MANGA
+  DIGITAL_MANGA
+  4_KOMA
 }
 
 enum MediaRelation {
@@ -98,6 +238,20 @@ enum MediaRelation {
   SOURCE
   COMPILATION
   CONTAINS
+}
+
+type AiringSchedule {
+  id: Int
+  mediaId: Int
+  episode: Int
+  airingAt: Int
+  timeUntilAiring: Int
+  media: Media
+}
+
+type AiringConnection {
+  pageInfo: PageInfo
+  nodes: [AiringSchedule]
 }
 
 type FuzzyDate {

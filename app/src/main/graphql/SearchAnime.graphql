@@ -9,9 +9,14 @@ query SearchAnime($search: String, $page: Int, $type: MediaType) {
       }
       description
       status
+      format
       episodes
+      duration
+      season
+      seasonYear
       coverImage {
         extraLarge
+        large
         color
       }
       bannerImage
@@ -37,13 +42,25 @@ query SearchAnime($search: String, $page: Int, $type: MediaType) {
             id
             title {
               romaji
+              english
             }
             coverImage {
               large
+              extraLarge
             }
+            status
           }
         }
       }
+      studios(isMain: true) {
+        nodes {
+          name
+        }
+      }
+      averageScore
+      popularity
+      siteUrl
+      synonyms
     }
   }
 }

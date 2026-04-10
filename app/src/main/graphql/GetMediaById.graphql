@@ -1,0 +1,87 @@
+query GetMediaById($id: Int!) {
+  media: Media(id: $id) {
+    id
+    idMal
+    title {
+      romaji
+      english
+      native
+    }
+    description
+    status
+    format
+    episodes
+    duration
+    season
+    seasonYear
+    startDate {
+      year
+      month
+      day
+    }
+    endDate {
+      year
+      month
+      day
+    }
+    nextAiringEpisode {
+      episode
+      airingAt
+      timeUntilAiring
+    }
+    coverImage {
+      extraLarge
+      large
+      color
+    }
+    bannerImage
+    genres
+    tags {
+      name
+      description
+    }
+    relations {
+      edges {
+        relationType
+        node {
+          id
+          title {
+            romaji
+            english
+          }
+          coverImage {
+            large
+            extraLarge
+          }
+          status
+          format
+        }
+      }
+    }
+    studios(isMain: true) {
+      nodes {
+        name
+        siteUrl
+      }
+    }
+    externalLinks {
+      url
+      site
+      type
+    }
+    trailer {
+      id
+      site
+      thumbnail
+    }
+    averageScore
+    meanScore
+    popularity
+    trending
+    favourites
+    isAdult
+    siteUrl
+    synonyms
+    source
+  }
+}

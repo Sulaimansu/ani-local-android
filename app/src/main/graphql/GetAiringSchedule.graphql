@@ -1,0 +1,42 @@
+query GetAiringSchedule($airingAt_greater: Int, $airingAt_lesser: Int) {
+  airingSchedules: AiringSchedule(airingAt_greater: $airingAt_greater, airingAt_lesser: $airingAt_lesser, perPage: 50) {
+    nodes {
+      episode
+      airingAt
+      timeUntilAiring
+      media {
+        id
+        title {
+          romaji
+          english
+          native
+        }
+        status
+        format
+        episodes
+        duration
+        season
+        seasonYear
+        coverImage {
+          extraLarge
+          large
+          color
+        }
+        bannerImage
+        genres
+        nextAiringEpisode {
+          episode
+          airingAt
+          timeUntilAiring
+        }
+        studios(isMain: true) {
+          nodes {
+            name
+          }
+        }
+        averageScore
+        popularity
+      }
+    }
+  }
+}

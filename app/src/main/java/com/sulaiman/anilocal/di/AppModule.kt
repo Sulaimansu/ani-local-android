@@ -3,9 +3,9 @@ package com.sulaiman.anilocal.di
 import android.content.Context
 import androidx.room.Room
 import com.apollographql.apollo.ApolloClient
-import com.sulaiman.anilocal.data.local.AnimeDao
+import com.apollographql.apollo.network.okhttp.OkHttpNetworkTransport
 import com.sulaiman.anilocal.data.local.AniDatabase
-import com.sulaiman.anilocal.data.remote.AniListRepository
+import com.sulaiman.anilocal.data.local.AnimeDao
 import com.sulaiman.anilocal.data.repository.AnimeRepositoryImpl
 import com.sulaiman.anilocal.domain.repository.AnimeRepository
 import dagger.Module
@@ -13,6 +13,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import javax.inject.Singleton
 
 @Module
@@ -22,8 +24,17 @@ object AppModule {
     @Provides
     @Singleton
     fun provideApolloClient(): ApolloClient {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
+        val okHttpClient = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
+
         return ApolloClient.Builder()
-            .serverUrl("https://graphql.anilist.co")
+            .httpServerUrl("https://graphql.anilist.co")
+            .okHttpClient(okHttpClient)
             .build()
     }
 
@@ -41,7 +52,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAnimeDao(db: AniDatabase): AnimeDao = db.animeDao()
+    fun provideAnimeDao(database: AniDatabase): AnimeDao = database.animeDao()
 
     @Provides
     @Singleton

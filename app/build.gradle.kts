@@ -90,6 +90,9 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
+    // OkHttp
+    implementation(libs.okhttp.logging.interceptor)
+
     // Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

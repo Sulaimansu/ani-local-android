@@ -1,4 +1,4 @@
-package com.sulaiman.anilocal.presentation.screens.search
+package com.sulaiman.anilocal.presentation.screens.airing
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,44 +9,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.sulaiman.anilocal.R
-import com.sulaiman.anilocal.domain.model.LocalAnime
 import com.sulaiman.anilocal.presentation.ui.theme.AniBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(
+fun AiringScreen(
     onNavigateToDetail: (Int) -> Unit,
-    viewModel: SearchViewModel = hiltViewModel()
+    viewModel: AiringViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    var query by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadAiringToday()
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("🔍 Search AniList") },
+            title = { Text("📺 Airing Today") },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.surface,
                 titleContentColor = MaterialTheme.colorScheme.onSurface
             )
-        )
-
-        OutlinedTextField(
-            value = query,
-            onValueChange = {
-                query = it
-                viewModel.onQueryChange(it)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            label = { Text(stringResource(R.string.search_hint)) },
-            singleLine = true,
-            shape = MaterialTheme.shapes.medium
         )
 
         when {
@@ -55,7 +44,14 @@ fun SearchScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = AniBlue)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(color = AniBlue)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.loading),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
@@ -64,22 +60,30 @@ fun SearchScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = state.error ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(16.dp)
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = state.error ?: "",
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                        Button(onClick = { viewModel.loadAiringToday() }) {
+                            Text(stringResource(R.string.retry))
+                        }
+                    }
                 }
             }
 
-            state.results.isEmpty() && query.length > 2 -> {
+            state.airingAnime.isEmpty() -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.no_results),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = stringResource(R.string.no_airing_today),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(32.dp)
                     )
                 }
             }
@@ -90,11 +94,11 @@ fun SearchScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(state.results, key = { it.id }) { anime ->
-                        SearchResultItem(
+                    items(state.airingAnime, key = { "${it.id}-${it.episode}" }) { anime ->
+                        AiringAnimeItem(
                             anime = anime,
                             onClick = { onNavigateToDetail(anime.id) },
-                            onAddToLibrary = { viewModel.saveAnime(anime) }
+                            timeRemaining = anime.timeUntilAiring
                         )
                     }
                 }
@@ -104,11 +108,15 @@ fun SearchScreen(
 }
 
 @Composable
-fun SearchResultItem(
-    anime: LocalAnime,
+fun AiringAnimeItem(
+    anime: com.sulaiman.anilocal.domain.model.AiringAnime,
     onClick: () -> Unit,
-    onAddToLibrary: () -> Unit
+    timeRemaining: Int
 ) {
+    val countdownText = remember(timeRemaining) {
+        formatCountdown(timeRemaining)
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick
@@ -134,7 +142,7 @@ fun SearchResultItem(
                 Text(
                     text = anime.titleRomaji,
                     style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 anime.titleEnglish?.let {
@@ -151,39 +159,42 @@ fun SearchResultItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "📺 ${anime.format.name}",
+                        text = "📺 Ep ${anime.episode}",
                         style = MaterialTheme.typography.labelSmall,
                         color = AniBlue
                     )
-                    anime.episodes?.let { eps ->
-                        Text(
-                            text = "📦 $eps eps",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    anime.averageScore?.let { score ->
-                        Text(
-                            text = "⭐ $score",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                anime.genres.takeIf { it.isNotEmpty() }?.let { genres ->
                     Text(
-                        text = genres.joinToString(" • ").take(50) + if (genres.joinToString(" • ").length > 50) "…" else "",
+                        text = "⏰ $countdownText",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = when {
+                            timeRemaining < 0 -> MaterialTheme.colorScheme.error
+                            timeRemaining < 600 -> MaterialTheme.colorScheme.error
+                            timeRemaining < 3600 -> MaterialTheme.colorScheme.tertiary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+                }
+                anime.studios.takeIf { it.isNotEmpty() }?.let { studios ->
+                    Text(
+                        text = "🎨 ${studios.joinToString(", ")}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                FilledTonalButton(
-                    onClick = onAddToLibrary,
-                    modifier = Modifier.padding(top = 4.dp)
-                ) {
-                    Text("➕ Add to Library", style = MaterialTheme.typography.labelSmall)
-                }
             }
         }
     }
+}
+
+fun formatCountdown(seconds: Int): String {
+    val absSeconds = kotlin.math.abs(seconds)
+    val d = absSeconds / 86400
+    val h = (absSeconds % 86400) / 3600
+    val m = (absSeconds % 3600) / 60
+    val s = absSeconds % 60
+    val prefix = if (seconds < 0) "Aired " else "In "
+    return if (d > 0) "$prefix${d}d ${h}h"
+    else if (h > 0) "$prefix${h}h ${m}m"
+    else if (m > 0) "$prefix${m}m ${s}s"
+    else "$prefix${s}s"
 }

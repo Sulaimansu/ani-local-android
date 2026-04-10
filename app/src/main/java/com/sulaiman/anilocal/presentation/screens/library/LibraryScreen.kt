@@ -1,59 +1,70 @@
 package com.sulaiman.anilocal.presentation.screens.library
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.sulaiman.anilocal.domain.model.AnimeStatus
+import coil.compose.AsyncImage
+import com.sulaiman.anilocal.R
 import com.sulaiman.anilocal.presentation.ui.theme.AniBlue
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
-    onNavigateToSearch: () -> Unit,
+    onNavigateToDetail: (Int) -> Unit,
     viewModel: LibraryViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Library") })
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onNavigateToSearch) {
-                Text("+")
-            }
-        }
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            ScrollableTabRow(
-                selectedTabIndex = 0,
+    Column(modifier = Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("📚 Library") },
+            colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = AniBlue
-            ) {
-                Tab(
-                    selected = state.currentFilter == null,
-                    onClick = { viewModel.setFilter(null) },
-                    text = { Text("All") }
-                )
-                AnimeStatus.values().forEach { status ->
-                    Tab(
-                        selected = state.currentFilter == status,
-                        onClick = { viewModel.setFilter(status) },
-                        text = { Text(status.name) }
-                    )
-                }
-            }
+                titleContentColor = MaterialTheme.colorScheme.onSurface
+            )
+        )
 
-            LazyColumn {
-                items(state.filteredAnime) { anime ->
-                    LibraryItem(anime) { newStatus ->
-                        viewModel.updateStatus(anime.id, newStatus)
-                    }
+        FilterChipsRow(
+            currentFilter = state.currentFilter,
+            onFilterChange = { viewModel.setFilter(it) }
+        )
+
+        if (state.filteredAnime.isEmpty() && !state.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.no_library),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(32.dp)
+                )
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(state.filteredAnime, key = { it.id }) { anime ->
+                    LibraryGridItem(
+                        anime = anime,
+                        onClick = { onNavigateToDetail(anime.id) }
+                    )
                 }
             }
         }
@@ -61,36 +72,91 @@ fun LibraryScreen(
 }
 
 @Composable
-fun LibraryItem(anime: com.sulaiman.anilocal.domain.model.LocalAnime, onUpdateStatus: (AnimeStatus) -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(anime.titleRomaji, style = MaterialTheme.typography.titleMedium)
-            Text("Status: ${anime.status}", style = MaterialTheme.typography.bodySmall)
-            
-            anime.nextAiringTime?.let { time ->
-                val remaining = (time - System.currentTimeMillis()) / 1000
-                if (remaining > 0) {
-                    Text("Next Ep ${anime.nextEpisode ?: "?"} in ${formatTime(remaining)}")
-                }
-            }
+fun FilterChipsRow(
+    currentFilter: String?,
+    onFilterChange: (String?) -> Unit
+) {
+    val filters = listOf<Pair<String?, String>>(
+        null to "All",
+        "RELEASING" to "Airing",
+        "FINISHED" to "Completed",
+        "NOT_YET_RELEASED" to "Upcoming",
+    )
 
-            Row {
-                AnimeStatus.values().forEach {
-                    Button(onClick = { onUpdateStatus(it) }) {
-                        Text(it.name.take(1))
-                    }
-                }
-            }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        filters.forEach { (value, label) ->
+            FilterChip(
+                selected = currentFilter == value,
+                onClick = { onFilterChange(value) },
+                label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+            )
         }
     }
 }
 
-fun formatTime(seconds: Long): String {
-    val d = seconds / 86400
-    val h = (seconds % 86400) / 3600
-    val m = (seconds % 3600) / 60
-    return if (d > 0) "${d}d ${h}h" else if (h > 0) "${h}h ${m}m" else "${m}m"
+@Composable
+fun LibraryGridItem(
+    anime: com.sulaiman.anilocal.domain.model.LocalAnime,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick
+    ) {
+        Column {
+            AsyncImage(
+                model = anime.coverImage,
+                contentDescription = anime.titleRomaji,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(0.7f),
+                contentScale = ContentScale.Crop
+            )
+            Column(modifier = Modifier.padding(8.dp)) {
+                Text(
+                    text = anime.titleRomaji,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    anime.format.let { fmt ->
+                        if (fmt != com.sulaiman.anilocal.domain.model.AnimeFormat.UNKNOWN) {
+                            Text(
+                                text = "🎬 ${fmt.name}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = AniBlue
+                            )
+                        }
+                    }
+                    if (anime.mediaStatus == "RELEASING") {
+                        Text(
+                            text = "🔴",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+                if (anime.genres.isNotEmpty()) {
+                    Text(
+                        text = anime.genres.take(2).joinToString(", "),
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
 }
