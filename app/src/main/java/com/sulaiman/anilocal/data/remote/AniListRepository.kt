@@ -4,6 +4,7 @@ import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
 import com.sulaiman.anilocal.data.remote.graphql.SearchAnimeQuery
 import com.sulaiman.anilocal.data.remote.graphql.type.MediaType
+import com.sulaiman.anilocal.data.remote.graphql.type.MediaStatus
 import com.sulaiman.anilocal.domain.model.LocalAnime
 import com.sulaiman.anilocal.domain.model.AnimeStatus
 import kotlinx.coroutines.flow.Flow
@@ -29,35 +30,33 @@ class AniListRepository @Inject constructor(
             }
 
             val mediaList = response.data?.page?.media?.filterNotNull() ?: emptyList()
-            val mapped = mediaList.mapNotNull { media -> media?.toLocalAnime() }
+            val mapped = mediaList.map { m ->
+                LocalAnime(
+                    id = m.id ?: 0,
+                    titleRomaji = m.title?.romaji ?: "",
+                    titleEnglish = m.title?.english,
+                    titleNative = m.title?.native,
+                    description = m.description,
+                    status = when (m.status) {
+                        MediaStatus.FINISHED -> AnimeStatus.COMPLETED
+                        MediaStatus.RELEASING -> AnimeStatus.WATCHING
+                        else -> AnimeStatus.PLANNING
+                    },
+                    episodes = m.episodes,
+                    coverImage = m.coverImage?.extraLarge,
+                    coverColor = m.coverImage?.color,
+                    bannerImage = m.bannerImage,
+                    genres = m.genres?.filterNotNull() ?: emptyList(),
+                    tags = m.tags?.mapNotNull { tag -> tag?.name } ?: emptyList(),
+                    startDate = m.startDate?.year?.toLong(),
+                    nextAiringTime = m.nextAiringEpisode?.airingAt?.toLong()?.times(1000),
+                    nextEpisode = m.nextAiringEpisode?.episode,
+                    relationsJson = null
+                )
+            }
             emit(Result.success(mapped))
         } catch (e: Exception) {
             emit(Result.failure(e))
         }
-    }
-
-    private fun SearchAnimeQuery.Media.toLocalAnime(): LocalAnime {
-        return LocalAnime(
-            id = id ?: 0,
-            titleRomaji = title?.romaji ?: "",
-            titleEnglish = title?.english,
-            titleNative = title?.native,
-            description = description,
-            status = when (status) {
-                SearchAnimeQuery.MediaStatus.FINISHED -> AnimeStatus.COMPLETED
-                SearchAnimeQuery.MediaStatus.RELEASING -> AnimeStatus.WATCHING
-                else -> AnimeStatus.PLANNING
-            },
-            episodes = episodes,
-            coverImage = coverImage?.extraLarge,
-            coverColor = coverImage?.color,
-            bannerImage = bannerImage,
-            genres = genres?.filterNotNull() ?: emptyList(),
-            tags = tags?.mapNotNull { tag -> tag?.name } ?: emptyList(),
-            startDate = startDate?.year?.toLong(),
-            nextAiringTime = nextAiringEpisode?.airingAt?.toLong()?.times(1000),
-            nextEpisode = nextAiringEpisode?.episode,
-            relationsJson = null
-        )
     }
 }

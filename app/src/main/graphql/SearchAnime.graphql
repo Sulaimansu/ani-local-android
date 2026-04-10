@@ -1,5 +1,5 @@
 query SearchAnime($search: String, $page: Int, $type: MediaType) {
-  Page(page: $page, perPage: 20) {
+  page: Page(page: $page, perPage: 20) {
     media(type: $type, search: $search) {
       id
       title {
