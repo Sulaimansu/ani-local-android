@@ -3,7 +3,7 @@ package com.sulaiman.anilocal.presentation
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -27,10 +27,10 @@ import com.sulaiman.anilocal.presentation.screens.search.SearchScreen
 import com.sulaiman.anilocal.presentation.screens.detail.AnimeDetailScreen
 
 sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    data object Library : Screen("library", "Library", Icons.Default.LibraryBooks)
-    data object Search : Screen("search", "Search", Icons.Default.Search)
-    data object Airing : Screen("airing", "Airing", Icons.Default.CalendarToday)
-    data object Detail : Screen("detail/{animeId}", "Details", Icons.Default.LibraryBooks)
+    data object Library : Screen("library", "Library", Icons.Filled.LibraryBooks)
+    data object Search : Screen("search", "Search", Icons.Filled.Search)
+    data object Airing : Screen("airing", "Airing", Icons.Filled.CalendarMonth)
+    data object Detail : Screen("detail/{animeId}", "Details", Icons.Filled.LibraryBooks)
 
     companion object {
         val bottomNavScreens = listOf(Library, Search, Airing)

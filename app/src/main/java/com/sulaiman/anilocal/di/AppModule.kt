@@ -3,7 +3,6 @@ package com.sulaiman.anilocal.di
 import android.content.Context
 import androidx.room.Room
 import com.apollographql.apollo.ApolloClient
-import com.apollographql.apollo.network.okhttp.OkHttpNetworkTransport
 import com.sulaiman.anilocal.data.local.AniDatabase
 import com.sulaiman.anilocal.data.local.AnimeDao
 import com.sulaiman.anilocal.data.repository.AnimeRepositoryImpl

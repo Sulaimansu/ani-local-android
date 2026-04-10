@@ -18,6 +18,7 @@ import coil.compose.AsyncImage
 import com.sulaiman.anilocal.R
 import com.sulaiman.anilocal.presentation.ui.theme.AniBlue
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     onNavigateToDetail: (Int) -> Unit,
