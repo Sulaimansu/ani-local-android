@@ -12,6 +12,7 @@ hilt = "2.51.1"
 hiltNavigation = "1.2.0"
 room = "2.6.1"
 coroutines = "1.8.1"
+serialization = "1.6.3"
 apollo = "4.0.0"
 work = "2.9.0"
 coil = "2.6.0"
@@ -47,6 +48,9 @@ room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
+# Serialization
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
+
 # Apollo GraphQL
 apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", version.ref = "apollo" }
 
@@ -61,6 +65,7 @@ coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coi
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version = "2.0.0-1.0.21" }
 apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }

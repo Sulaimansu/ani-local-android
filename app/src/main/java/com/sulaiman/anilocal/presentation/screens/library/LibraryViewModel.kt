@@ -7,6 +7,7 @@ import com.sulaiman.anilocal.domain.model.LocalAnime
 import com.sulaiman.anilocal.domain.repository.AnimeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class LibraryState(

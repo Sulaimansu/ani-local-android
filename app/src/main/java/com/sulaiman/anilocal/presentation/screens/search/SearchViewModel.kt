@@ -38,8 +38,8 @@ class SearchViewModel @Inject constructor(
             repository.searchAnime(query, 1).collect { result ->
                 result.onSuccess { list ->
                     _state.update { it.copy(results = list, isLoading = false) }
-                }.onFailure {
-                    _state.update { it.copy(error = it.message, isLoading = false) }
+                }.onFailure { error ->
+                    _state.update { it.copy(error = error.message, isLoading = false) }
                 }
             }
         }

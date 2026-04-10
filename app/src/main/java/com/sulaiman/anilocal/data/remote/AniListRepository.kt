@@ -2,7 +2,7 @@ package com.sulaiman.anilocal.data.remote
 
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
-import com.sulaiman.anilocal.SearchAnimeQuery
+import com.sulaiman.anilocal.data.remote.graphql.SearchAnimeQuery
 import com.sulaiman.anilocal.domain.model.LocalAnime
 import com.sulaiman.anilocal.domain.model.AnimeStatus
 import kotlinx.coroutines.flow.Flow
@@ -27,16 +27,16 @@ class AniListRepository @Inject constructor(
             }
 
             val mediaList = response.data?.page?.media?.filterNotNull() ?: emptyList()
-            val mapped = mediaList.map { it.toLocalAnime() }
+            val mapped = mediaList.map { it!!.toLocalAnime() }
             emit(Result.success(mapped))
         } catch (e: Exception) {
             emit(Result.failure(e))
         }
     }
 
-    private fun SearchAnimeQuery.Medium.toLocalAnime(): LocalAnime {
+    private fun SearchAnimeQuery.Media.toLocalAnime(): LocalAnime {
         return LocalAnime(
-            id = id,
+            id = id!!,
             titleRomaji = title?.romaji ?: "",
             titleEnglish = title?.english,
             titleNative = title?.native,
@@ -52,7 +52,7 @@ class AniListRepository @Inject constructor(
             bannerImage = bannerImage,
             genres = genres?.filterNotNull() ?: emptyList(),
             tags = tags?.mapNotNull { it?.name } ?: emptyList(),
-            startDate = startDate?.let { it.year?.toLong() },
+            startDate = startDate?.year?.toLong(),
             nextAiringTime = nextAiringEpisode?.airingAt?.toLong()?.times(1000),
             nextEpisode = nextAiringEpisode?.episode,
             relationsJson = null
