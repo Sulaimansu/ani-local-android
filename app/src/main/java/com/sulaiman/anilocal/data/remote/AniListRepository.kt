@@ -3,6 +3,7 @@ package com.sulaiman.anilocal.data.remote
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
 import com.sulaiman.anilocal.data.remote.graphql.SearchAnimeQuery
+import com.sulaiman.anilocal.data.remote.graphql.type.MediaType
 import com.sulaiman.anilocal.domain.model.LocalAnime
 import com.sulaiman.anilocal.domain.model.AnimeStatus
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +18,8 @@ class AniListRepository @Inject constructor(
             val response = apolloClient.query(
                 SearchAnimeQuery(
                     search = Optional.presentIfNotNull(query),
-                    page = Optional.presentIfNotNull(page)
+                    page = Optional.presentIfNotNull(page),
+                    type = Optional.presentIfNotNull(MediaType.ANIME)
                 )
             ).execute()
 
@@ -27,7 +29,7 @@ class AniListRepository @Inject constructor(
             }
 
             val mediaList = response.data?.page?.media?.filterNotNull() ?: emptyList()
-            val mapped = mediaList.map { it!!.toLocalAnime() }
+            val mapped = mediaList.mapNotNull { media -> media?.toLocalAnime() }
             emit(Result.success(mapped))
         } catch (e: Exception) {
             emit(Result.failure(e))
@@ -36,7 +38,7 @@ class AniListRepository @Inject constructor(
 
     private fun SearchAnimeQuery.Media.toLocalAnime(): LocalAnime {
         return LocalAnime(
-            id = id!!,
+            id = id ?: 0,
             titleRomaji = title?.romaji ?: "",
             titleEnglish = title?.english,
             titleNative = title?.native,
@@ -51,7 +53,7 @@ class AniListRepository @Inject constructor(
             coverColor = coverImage?.color,
             bannerImage = bannerImage,
             genres = genres?.filterNotNull() ?: emptyList(),
-            tags = tags?.mapNotNull { it?.name } ?: emptyList(),
+            tags = tags?.mapNotNull { tag -> tag?.name } ?: emptyList(),
             startDate = startDate?.year?.toLong(),
             nextAiringTime = nextAiringEpisode?.airingAt?.toLong()?.times(1000),
             nextEpisode = nextAiringEpisode?.episode,

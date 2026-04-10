@@ -11,6 +11,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sulaiman.anilocal.domain.model.AnimeStatus
 import com.sulaiman.anilocal.presentation.ui.theme.AniBlue
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     onNavigateToSearch: () -> Unit,

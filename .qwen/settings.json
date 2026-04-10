@@ -11,7 +11,8 @@
       "Bash(curl *)",
       "Bash(chmod *)",
       "Bash(file *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(./gradlew *)"
     ]
   },
   "$version": 3
