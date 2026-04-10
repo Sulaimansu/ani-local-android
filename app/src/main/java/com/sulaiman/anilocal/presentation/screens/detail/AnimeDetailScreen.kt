@@ -455,20 +455,19 @@ fun formatNumber(num: Int): String = when {
 
 fun parseRelationsJson(json: String): List<com.sulaiman.anilocal.domain.model.AnimeRelation> {
     return try {
-        val element = kotlinx.serialization.json.Json.parseToJsonElement(json)
-        val arr = element.jsonArray
-        arr.map { obj ->
-            val map = obj.jsonObject
+        val regex = """\{"type":"([^"]*)","id":(\d+),"title":"([^"]*)","cover":"([^"]*)"(?:,"titleEn":"([^"]*)","status":"([^"]*)","format":"([^"]*)")?\}""".toRegex()
+        regex.findAll(json).map { match ->
+            val (type, id, title, cover, titleEn, status, format) = match.destructured
             com.sulaiman.anilocal.domain.model.AnimeRelation(
-                id = (map["id"]?.jsonPrimitive?.contentOrNull)?.toIntOrNull() ?: 0,
-                titleRomaji = (map["title"]?.jsonPrimitive?.contentOrNull) ?: "",
-                titleEnglish = map["titleEn"]?.jsonPrimitive?.contentOrNull,
-                relationType = (map["type"]?.jsonPrimitive?.contentOrNull) ?: "",
-                coverImage = map["cover"]?.jsonPrimitive?.contentOrNull,
-                status = map["status"]?.jsonPrimitive?.contentOrNull,
-                format = map["format"]?.jsonPrimitive?.contentOrNull
+                id = id.toIntOrNull() ?: 0,
+                titleRomaji = title,
+                titleEnglish = titleEn.takeIf { it.isNotEmpty() },
+                relationType = type,
+                coverImage = cover.takeIf { it.isNotEmpty() },
+                status = status.takeIf { it.isNotEmpty() },
+                format = format.takeIf { it.isNotEmpty() }
             )
-        }
+        }.toList()
     } catch (e: Exception) {
         emptyList()
     }

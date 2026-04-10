@@ -9,7 +9,6 @@ import com.sulaiman.anilocal.data.remote.graphql.SearchAnimeQuery
 import com.sulaiman.anilocal.data.remote.graphql.type.MediaFormat
 import com.sulaiman.anilocal.data.remote.graphql.type.MediaSeason
 import com.sulaiman.anilocal.data.remote.graphql.type.MediaType
-import com.sulaiman.anilocal.data.remote.graphql.type.FuzzyDate
 import com.sulaiman.anilocal.domain.model.AiringAnime
 import com.sulaiman.anilocal.domain.model.AnimeFormat
 import com.sulaiman.anilocal.domain.model.AnimeSeason
@@ -17,7 +16,6 @@ import com.sulaiman.anilocal.domain.model.AnimeStatus
 import com.sulaiman.anilocal.domain.model.LocalAnime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.serialization.json.*
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import java.time.LocalDate
@@ -51,9 +49,6 @@ class AniListRepository @Inject constructor(
             val mediaList = pageData?.media ?: emptyList()
             val nonNullMedia = mediaList.filterNotNull()
             val mapped = nonNullMedia.map { m ->
-                val fmt = m.format
-                val sn = m.season
-                val sd = m.startDate
                 LocalAnime(
                     id = m.id ?: 0,
                     titleRomaji = (m.title?.romaji) ?: "",
@@ -62,10 +57,10 @@ class AniListRepository @Inject constructor(
                     description = m.description,
                     status = AnimeStatus.PLANNING,
                     mediaStatus = m.status?.name,
-                    format = toAnimeFormat(fmt),
+                    format = toAnimeFormat(m.format),
                     episodes = m.episodes,
                     duration = m.duration,
-                    season = toAnimeSeason(sn),
+                    season = toAnimeSeason(m.season),
                     seasonYear = m.seasonYear,
                     coverImage = m.coverImage?.extraLarge ?: m.coverImage?.large,
                     coverColor = m.coverImage?.color,
@@ -73,7 +68,7 @@ class AniListRepository @Inject constructor(
                     genres = m.genres?.filterNotNull() ?: emptyList(),
                     tags = m.tags?.mapNotNull { t -> t?.name } ?: emptyList(),
                     synonyms = m.synonyms?.filterNotNull() ?: emptyList(),
-                    startDate = fuzzyToMillisSearch(sd),
+                    startDate = fuzzyToMillis(m.startDate?.year, m.startDate?.month, m.startDate?.day),
                     endDate = null,
                     nextAiringTime = m.nextAiringEpisode?.airingAt?.toLong()?.times(1000),
                     nextEpisode = m.nextAiringEpisode?.episode,
@@ -101,10 +96,6 @@ class AniListRepository @Inject constructor(
             } else {
                 val med = response.data?.media
                 if (med != null) {
-                    val fmt = med.format
-                    val sn = med.season
-                    val sd = med.startDate
-                    val ed = med.endDate
                     Result.success(
                         LocalAnime(
                             id = med.id ?: 0,
@@ -115,10 +106,10 @@ class AniListRepository @Inject constructor(
                             description = med.description,
                             status = AnimeStatus.PLANNING,
                             mediaStatus = med.status?.name,
-                            format = toAnimeFormat(fmt),
+                            format = toAnimeFormat(med.format),
                             episodes = med.episodes,
                             duration = med.duration,
-                            season = toAnimeSeason(sn),
+                            season = toAnimeSeason(med.season),
                             seasonYear = med.seasonYear,
                             coverImage = med.coverImage?.extraLarge ?: med.coverImage?.large,
                             coverColor = med.coverImage?.color,
@@ -126,14 +117,14 @@ class AniListRepository @Inject constructor(
                             genres = med.genres?.filterNotNull() ?: emptyList(),
                             tags = med.tags?.mapNotNull { t -> t?.name } ?: emptyList(),
                             synonyms = med.synonyms?.filterNotNull() ?: emptyList(),
-                            startDate = fuzzyToMillisDetail(sd),
-                            endDate = fuzzyToMillisDetail(ed),
+                            startDate = fuzzyToMillis(med.startDate?.year, med.startDate?.month, med.startDate?.day),
+                            endDate = fuzzyToMillis(med.endDate?.year, med.endDate?.month, med.endDate?.day),
                             nextAiringTime = med.nextAiringEpisode?.airingAt?.toLong()?.times(1000),
                             nextEpisode = med.nextAiringEpisode?.episode,
                             averageScore = med.averageScore,
                             popularity = med.popularity,
                             studios = med.studios?.nodes?.filterNotNull()?.mapNotNull { s -> s?.name } ?: emptyList(),
-                            externalLinks = mapExternalLinks(med.externalLinks),
+                            externalLinks = externalLinksToJson(med.externalLinks),
                             trailerId = med.trailer?.id,
                             trailerSite = med.trailer?.site,
                             siteUrl = med.siteUrl,
@@ -223,77 +214,87 @@ class AniListRepository @Inject constructor(
         else -> AnimeSeason.UNKNOWN
     }
 
-    private fun fuzzyToMillisSearch(d: FuzzyDate?): Long? {
-        val y = d?.year ?: return null
-        val mo = (d.month ?: 1).coerceIn(1, 12)
-        val dy = (d.day ?: 1).coerceIn(1, 28)
+    private fun fuzzyToMillis(year: Int?, month: Int?, day: Int?): Long? {
+        val y = year ?: return null
+        val mo = (month ?: 1).coerceIn(1, 12)
+        val d = (day ?: 1).coerceIn(1, 28)
         return runCatching {
-            LocalDate.of(y, mo, dy).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-        }.getOrNull()
-    }
-
-    private fun fuzzyToMillisDetail(d: FuzzyDate?): Long? {
-        val y = d?.year ?: return null
-        val mo = (d.month ?: 1).coerceIn(1, 12)
-        val dy = (d.day ?: 1).coerceIn(1, 28)
-        return runCatching {
-            LocalDate.of(y, mo, dy).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+            LocalDate.of(y, mo, d).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
         }.getOrNull()
     }
 
     // ==================== JSON helpers ====================
 
-    private fun relationsToJson(edges: Array<out SearchAnimeQuery.Edge?>?): String? {
+    private fun relationsToJson(edges: List<SearchAnimeQuery.Edge?>?): String? {
         return runCatching {
             if (edges == null) return@runCatching null
-            buildJsonArray {
-                edges.filterNotNull().forEach { edge ->
-                    val n = edge.node
-                    add(buildJsonObject {
-                        put("type", edge.relationType?.name ?: "")
-                        put("id", (n?.id ?: 0).toString())
-                        put("title", (n?.title?.romaji) ?: "")
-                        put("cover", (n?.coverImage?.large ?: n?.coverImage?.extraLarge).orEmpty())
-                    })
-                }
-            }.toString()
+            val sb = StringBuilder()
+            sb.append("[")
+            var first = true
+            edges.filterNotNull().forEach { edge ->
+                if (!first) sb.append(",")
+                first = false
+                val n = edge.node
+                val relType = edge.relationType?.name ?: ""
+                val nid = n?.id ?: 0
+                val ntitle = (n?.title?.romaji) ?: ""
+                val ncover = (n?.coverImage?.large ?: n?.coverImage?.extraLarge).orEmpty()
+                sb.append("""{"type":"$relType","id":$nid,"title":"${escapeJson(ntitle)}","cover":"${escapeJson(ncover)}"}""")
+            }
+            sb.append("]")
+            sb.toString()
         }.getOrNull()
     }
 
-    private fun relationsToJsonDetail(edges: Array<out GetMediaByIdQuery.Edge?>?): String? {
+    private fun relationsToJsonDetail(edges: List<GetMediaByIdQuery.Edge?>?): String? {
         return runCatching {
             if (edges == null) return@runCatching null
-            buildJsonArray {
-                edges.filterNotNull().forEach { edge ->
-                    val n = edge.node
-                    add(buildJsonObject {
-                        put("type", edge.relationType?.name ?: "")
-                        put("id", (n?.id ?: 0).toString())
-                        put("title", (n?.title?.romaji) ?: "")
-                        put("titleEn", n?.title?.english ?: "")
-                        put("cover", (n?.coverImage?.large ?: n?.coverImage?.extraLarge).orEmpty())
-                        put("status", n?.status?.name ?: "")
-                        put("format", n?.format?.name ?: "")
-                    })
-                }
-            }.toString()
+            val sb = StringBuilder()
+            sb.append("[")
+            var first = true
+            edges.filterNotNull().forEach { edge ->
+                if (!first) sb.append(",")
+                first = false
+                val n = edge.node
+                val relType = edge.relationType?.name ?: ""
+                val nid = n?.id ?: 0
+                val ntitle = (n?.title?.romaji) ?: ""
+                val ntitleEn = n?.title?.english ?: ""
+                val ncover = (n?.coverImage?.large ?: n?.coverImage?.extraLarge).orEmpty()
+                val nstatus = n?.status?.name ?: ""
+                val nformat = n?.format?.name ?: ""
+                sb.append("""{"type":"$relType","id":$nid,"title":"${escapeJson(ntitle)}","titleEn":"${escapeJson(ntitleEn)}","cover":"${escapeJson(ncover)}","status":"$nstatus","format":"$nformat"}""")
+            }
+            sb.append("]")
+            sb.toString()
         }.getOrNull()
     }
 
-    private fun mapExternalLinks(links: Array<out GetMediaByIdQuery.ExternalLink?>?): String? {
+    private fun externalLinksToJson(links: List<GetMediaByIdQuery.ExternalLink?>?): String? {
         return runCatching {
             if (links == null) return@runCatching null
-            buildJsonArray {
-                links.filterNotNull().forEach { link ->
-                    add(buildJsonObject {
-                        put("url", link.url)
-                        put("site", link.site)
-                        put("type", link.type)
-                    })
-                }
-            }.toString()
+            val sb = StringBuilder()
+            sb.append("[")
+            var first = true
+            links.filterNotNull().forEach { link ->
+                if (!first) sb.append(",")
+                first = false
+                val url = link.url ?: ""
+                val site = link.site ?: ""
+                val type = link.type ?: ""
+                sb.append("""{"url":"${escapeJson(url)}","site":"${escapeJson(site)}","type":"${escapeJson(type)}"}""")
+            }
+            sb.append("]")
+            sb.toString()
         }.getOrNull()
     }
+
+    private fun escapeJson(s: String): String = s
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t")
 
     companion object {
         fun createDefaultClient(): ApolloClient {
