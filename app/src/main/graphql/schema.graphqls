@@ -10,7 +10,21 @@ type Query {
 }
 
 type Page {
-  media: [Media]
+  pageInfo: PageInfo
+  media(id: Int, type: MediaType, search: String): [Media]
+}
+
+type PageInfo {
+  total: Int
+  perPage: Int
+  currentPage: Int
+  lastPage: Int
+  hasNextPage: Boolean
+}
+
+enum MediaType {
+  ANIME
+  MANGA
 }
 
 type Media {
