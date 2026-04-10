@@ -221,7 +221,7 @@ enum MediaSource {
   ANIME
   WEB_MANGA
   DIGITAL_MANGA
-  4_KOMA
+  YONKOMA
 }
 
 enum MediaRelation {
