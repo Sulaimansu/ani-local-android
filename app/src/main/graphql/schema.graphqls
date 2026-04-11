@@ -5,6 +5,7 @@ schema {
 type Query {
   Page(page: Int, perPage: Int): Page
   Media(id: Int, search: String, type: MediaType): Media
+  AiringSchedule(airingAt_greater: Int, airingAt_lesser: Int, sort: [AiringSort], notYetAired: Boolean, page: Int, perPage: Int): AiringScheduleConnection
 }
 
 enum AiringSort {
@@ -14,6 +15,20 @@ enum AiringSort {
   EPISODE_DESC
   ID
   ID_DESC
+}
+
+type AiringScheduleConnection {
+  nodes: [AiringSchedule]
+  pageInfo: PageInfo
+}
+
+type AiringSchedule {
+  id: Int
+  mediaId: Int
+  episode: Int
+  airingAt: Int
+  timeUntilAiring: Int
+  media: Media
 }
 
 type Page {
