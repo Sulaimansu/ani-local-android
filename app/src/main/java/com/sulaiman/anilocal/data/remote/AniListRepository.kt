@@ -169,23 +169,16 @@ class AniListRepository @Inject constructor(
                 return@flow
             }
 
-            val airingData = data.AiringSchedule
-            if (airingData == null) {
-                android.util.Log.e("AiringQuery", "AiringSchedule is null")
-                emit(Result.failure(Exception("AiringSchedule is null")))
-                return@flow
-            }
-
-            val nodes: List<GetAiringScheduleQuery.Node?>? = airingData.nodes
-            android.util.Log.d("AiringQuery", "nodes: count=${nodes?.size}")
-            if (nodes == null || nodes.isEmpty()) {
-                android.util.Log.e("AiringQuery", "No nodes returned")
+            val airingData: List<GetAiringScheduleQuery.AiringSchedule?>? = data.page?.airingSchedules
+            android.util.Log.d("AiringQuery", "airingSchedules: count=${airingData?.size}")
+            if (airingData == null || airingData.isEmpty()) {
+                android.util.Log.e("AiringQuery", "No airing schedules returned")
                 emit(Result.failure(Exception("No airing schedules returned")))
                 return@flow
             }
-            val nonNullSchedules = nodes.filterNotNull()
+            val nonNullSchedules = airingData.filterNotNull()
             if (nonNullSchedules.isEmpty()) {
-                android.util.Log.e("AiringQuery", "All nodes were null")
+                android.util.Log.e("AiringQuery", "All airing schedules were null")
                 emit(Result.failure(Exception("All airing schedules were null")))
                 return@flow
             }

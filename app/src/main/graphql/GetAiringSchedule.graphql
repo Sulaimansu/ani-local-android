@@ -1,6 +1,6 @@
 query GetAiringSchedule($airingAt_greater: Int, $airingAt_lesser: Int) {
-  AiringSchedule(airingAt_greater: $airingAt_greater, airingAt_lesser: $airingAt_lesser, sort: [TIME], perPage: 50, notYetAired: true) {
-    nodes {
+  page: Page(page: 1, perPage: 50) {
+    airingSchedules(airingAt_greater: $airingAt_greater, airingAt_lesser: $airingAt_lesser) {
       id
       episode
       airingAt
