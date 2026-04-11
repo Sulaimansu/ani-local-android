@@ -145,6 +145,7 @@ class AniListRepository @Inject constructor(
         airingAtLesser: Int
     ): Flow<Result<List<AiringAnime>>> = flow {
         try {
+            android.util.Log.d("AiringQuery", "Querying airing: greater=$airingAtGreater, lesser=$airingAtLesser")
             val response = apolloClient.query(
                 GetAiringScheduleQuery(
                     airingAt_greater = Optional.presentIfNotNull(airingAtGreater),
@@ -152,33 +153,43 @@ class AniListRepository @Inject constructor(
                 )
             ).execute()
 
+            android.util.Log.d("AiringQuery", "hasErrors=${response.hasErrors()}, data=${response.data != null}, exception=${response.exception}")
             if (response.hasErrors()) {
-                emit(Result.failure(Exception("API Error: ${response.errors?.firstOrNull()?.message}")))
+                val errMsg = response.errors?.joinToString { it.message }
+                android.util.Log.e("AiringQuery", "GraphQL errors: $errMsg")
+                emit(Result.failure(Exception("API Error: $errMsg")))
                 return@flow
             }
 
             val data = response.data
             if (data == null) {
-                emit(Result.failure(Exception("No data from API")))
+                val exc = response.exception
+                android.util.Log.e("AiringQuery", "Data is null. Exception: ${exc?.message}", exc)
+                emit(Result.failure(Exception("No data from API${exc?.let { ": ${it.message}" }.orEmpty()}")))
                 return@flow
             }
 
             val pageData = data.page
             if (pageData == null) {
+                android.util.Log.e("AiringQuery", "Page is null")
                 emit(Result.failure(Exception("Page is null")))
                 return@flow
             }
 
             val airingData: List<GetAiringScheduleQuery.AiringSchedule?>? = pageData.airingSchedules
+            android.util.Log.d("AiringQuery", "airingSchedules: count=${airingData?.size}")
             if (airingData == null || airingData.isEmpty()) {
+                android.util.Log.e("AiringQuery", "No airing schedules returned")
                 emit(Result.failure(Exception("No airing schedules returned")))
                 return@flow
             }
             val nonNullSchedules = airingData.filterNotNull()
             if (nonNullSchedules.isEmpty()) {
+                android.util.Log.e("AiringQuery", "All airing schedules were null")
                 emit(Result.failure(Exception("All airing schedules were null")))
                 return@flow
             }
+            android.util.Log.d("AiringQuery", "Mapped ${nonNullSchedules.size} airing schedules")
             val mapped = nonNullSchedules.map { s ->
                 val m = s.media
                 AiringAnime(
