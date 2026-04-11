@@ -60,6 +60,7 @@ fun LibraryScreen(
             ) {
                 items(state.filteredAnime, key = { it.id }) { anime ->
                     LibraryGridItem(
+                        context = context,
                         anime = anime,
                         onClick = { onNavigateToDetail(anime.id) }
                     )
@@ -102,6 +103,7 @@ fun FilterChipsRow(
 
 @Composable
 fun LibraryGridItem(
+    context: android.content.Context,
     anime: com.sulaiman.anilocal.domain.model.LocalAnime,
     onClick: () -> Unit
 ) {

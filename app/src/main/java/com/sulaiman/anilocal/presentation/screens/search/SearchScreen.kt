@@ -94,6 +94,7 @@ fun SearchScreen(
                 ) {
                     items(state.results, key = { it.id }) { anime ->
                         SearchResultItem(
+                            context = context,
                             anime = anime,
                             isInLibrary = state.libraryIds.contains(anime.id),
                             onClick = { onNavigateToDetail(anime.id) },
@@ -114,6 +115,7 @@ fun SearchScreen(
 
 @Composable
 fun SearchResultItem(
+    context: android.content.Context,
     anime: LocalAnime,
     isInLibrary: Boolean,
     onClick: () -> Unit,

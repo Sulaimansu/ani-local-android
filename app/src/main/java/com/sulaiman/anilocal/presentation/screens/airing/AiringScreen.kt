@@ -98,6 +98,7 @@ fun AiringScreen(
                 ) {
                     items(state.airingAnime, key = { "${it.id}-${it.episode}" }) { anime ->
                         AiringAnimeItem(
+                            context = context,
                             anime = anime,
                             onClick = { onNavigateToDetail(anime.id) },
                             timeRemaining = anime.timeUntilAiring
@@ -111,6 +112,7 @@ fun AiringScreen(
 
 @Composable
 fun AiringAnimeItem(
+    context: android.content.Context,
     anime: com.sulaiman.anilocal.domain.model.AiringAnime,
     onClick: () -> Unit,
     timeRemaining: Int

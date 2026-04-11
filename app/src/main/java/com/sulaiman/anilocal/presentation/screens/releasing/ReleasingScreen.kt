@@ -58,6 +58,7 @@ fun ReleasingScreen(
             ) {
                 items(state.anime, key = { it.id }) { anime ->
                     ReleasingGridItem(
+                        context = context,
                         anime = anime,
                         onClick = { onNavigateToDetail(anime.id) }
                     )
@@ -69,6 +70,7 @@ fun ReleasingScreen(
 
 @Composable
 fun ReleasingGridItem(
+    context: android.content.Context,
     anime: com.sulaiman.anilocal.domain.model.LocalAnime,
     onClick: () -> Unit
 ) {
