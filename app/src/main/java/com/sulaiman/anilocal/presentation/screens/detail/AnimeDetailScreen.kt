@@ -73,6 +73,7 @@ fun AnimeDetailScreen(
                     userStatus = state.userStatus,
                     countdownText = state.countdownText,
                     onSaveToLibrary = { viewModel.saveToLibrary() },
+                    onRemoveFromLibrary = { viewModel.removeFromLibrary() },
                     onUpdateStatus = { viewModel.updateUserStatus(it) },
                     onNavigateToRelated = onNavigateToRelated,
                     modifier = Modifier
@@ -91,6 +92,7 @@ fun DetailContent(
     userStatus: com.sulaiman.anilocal.domain.model.AnimeStatus?,
     countdownText: String?,
     onSaveToLibrary: () -> Unit,
+    onRemoveFromLibrary: () -> Unit,
     onUpdateStatus: (com.sulaiman.anilocal.domain.model.AnimeStatus) -> Unit,
     onNavigateToRelated: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -193,7 +195,7 @@ fun DetailContent(
                 }
             } else {
                 OutlinedButton(
-                    onClick = { /* Already in library */ },
+                    onClick = { /* Placeholder - remove button is below */ },
                     modifier = Modifier.weight(1f),
                     enabled = false
                 ) {
@@ -203,6 +205,20 @@ fun DetailContent(
             anime.siteUrl?.let { url ->
                 OutlinedButton(onClick = { /* Open URL - would need Activity context */ }) {
                     Text("🔗 AniList")
+                }
+            }
+        }
+
+        // Remove button (if in library)
+        if (isInLibrary) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(onClick = { onRemoveFromLibrary() }) {
+                    Text("🗑 Remove from Library", color = MaterialTheme.colorScheme.error)
                 }
             }
         }

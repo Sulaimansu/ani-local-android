@@ -1,4 +1,4 @@
-package com.sulaiman.anilocal.presentation.screens.library
+package com.sulaiman.anilocal.presentation.screens.releasing
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -16,39 +16,34 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.sulaiman.anilocal.R
-import com.sulaiman.anilocal.domain.model.AnimeFormat
 import com.sulaiman.anilocal.domain.model.AnimeStatus
 import com.sulaiman.anilocal.presentation.ui.theme.AniBlue
+import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryScreen(
+fun ReleasingScreen(
     onNavigateToDetail: (Int) -> Unit,
-    viewModel: LibraryViewModel = hiltViewModel()
+    viewModel: ReleasingViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("📚 Library") },
+            title = { Text("🔴 Releasing") },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.surface,
                 titleContentColor = MaterialTheme.colorScheme.onSurface
             )
         )
 
-        FilterChipsRow(
-            currentFilter = state.currentFilter,
-            onFilterChange = { viewModel.setFilter(it) }
-        )
-
-        if (state.filteredAnime.isEmpty() && !state.isLoading) {
+        if (state.anime.isEmpty() && !state.isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = stringResource(R.string.no_library),
+                    text = "No releasing anime in your library",
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyLarge,
@@ -63,8 +58,8 @@ fun LibraryScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(state.filteredAnime, key = { it.id }) { anime ->
-                    LibraryGridItem(
+                items(state.anime, key = { it.id }) { anime ->
+                    ReleasingGridItem(
                         anime = anime,
                         onClick = { onNavigateToDetail(anime.id) }
                     )
@@ -75,38 +70,7 @@ fun LibraryScreen(
 }
 
 @Composable
-fun FilterChipsRow(
-    currentFilter: AnimeStatus?,
-    onFilterChange: (AnimeStatus?) -> Unit
-) {
-    val filters = listOf<Pair<AnimeStatus?, String>>(
-        null to "All",
-        AnimeStatus.WATCHING to "Watching",
-        AnimeStatus.PLANNING to "Planning",
-        AnimeStatus.COMPLETED to "Completed",
-        AnimeStatus.DROPPED to "Dropped",
-        AnimeStatus.PAUSED to "Paused",
-    )
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp)
-            .wrapContentHeight(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        filters.forEach { (value, label) ->
-            FilterChip(
-                selected = currentFilter == value,
-                onClick = { onFilterChange(value) },
-                label = { Text(label, style = MaterialTheme.typography.labelSmall) }
-            )
-        }
-    }
-}
-
-@Composable
-fun LibraryGridItem(
+fun ReleasingGridItem(
     anime: com.sulaiman.anilocal.domain.model.LocalAnime,
     onClick: () -> Unit
 ) {
@@ -132,39 +96,35 @@ fun LibraryGridItem(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val statusEmoji = when (anime.status) {
-                        AnimeStatus.WATCHING -> "▶️"
-                        AnimeStatus.COMPLETED -> "✅"
-                        AnimeStatus.PLANNING -> "📋"
-                        AnimeStatus.DROPPED -> "❌"
-                        AnimeStatus.PAUSED -> "⏸"
-                    }
-                    Text(
-                        text = statusEmoji,
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                    if (anime.mediaStatus == "RELEASING" && anime.nextEpisode != null) {
-                        Text(
-                            text = "Ep ${anime.nextEpisode}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = AniBlue
-                        )
+
+                val timeText = remember(anime.nextAiringTime) {
+                    val time = anime.nextAiringTime
+                    if (time == null || time <= 0L) "No schedule"
+                    else {
+                        val remaining = time - System.currentTimeMillis()
+                        if (remaining <= 0) "Airing now!"
+                        else {
+                            val d = TimeUnit.MILLISECONDS.toDays(remaining)
+                            val h = TimeUnit.MILLISECONDS.toHours(remaining) % 24
+                            val m = TimeUnit.MILLISECONDS.toMinutes(remaining) % 60
+                            if (d > 0) "${d}d ${h}h"
+                            else if (h > 0) "${h}h ${m}m"
+                            else "${m}m"
+                        }
                     }
                 }
-                if (anime.genres.isNotEmpty()) {
-                    Text(
-                        text = anime.genres.take(2).joinToString(", "),
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+
+                Text(
+                    text = if (anime.nextEpisode != null) "Ep ${anime.nextEpisode} in $timeText" else "Schedule: $timeText",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = AniBlue
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = anime.mediaStatus ?: "Unknown",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

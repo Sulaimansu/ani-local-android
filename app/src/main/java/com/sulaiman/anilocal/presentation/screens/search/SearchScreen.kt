@@ -93,8 +93,15 @@ fun SearchScreen(
                     items(state.results, key = { it.id }) { anime ->
                         SearchResultItem(
                             anime = anime,
+                            isInLibrary = state.libraryIds.contains(anime.id),
                             onClick = { onNavigateToDetail(anime.id) },
-                            onAddToLibrary = { viewModel.saveAnime(anime) }
+                            onToggleLibrary = {
+                                if (state.libraryIds.contains(anime.id)) {
+                                    viewModel.removeFromLibrary(anime.id)
+                                } else {
+                                    viewModel.saveAnime(anime)
+                                }
+                            }
                         )
                     }
                 }
@@ -106,8 +113,9 @@ fun SearchScreen(
 @Composable
 fun SearchResultItem(
     anime: LocalAnime,
+    isInLibrary: Boolean,
     onClick: () -> Unit,
-    onAddToLibrary: () -> Unit
+    onToggleLibrary: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -162,13 +170,6 @@ fun SearchResultItem(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    anime.averageScore?.let { score ->
-                        Text(
-                            text = "⭐ $score",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
                 anime.genres.takeIf { it.isNotEmpty() }?.let { genres ->
                     Text(
@@ -177,11 +178,20 @@ fun SearchResultItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                FilledTonalButton(
-                    onClick = onAddToLibrary,
-                    modifier = Modifier.padding(top = 4.dp)
-                ) {
-                    Text("➕ Add to Library", style = MaterialTheme.typography.labelSmall)
+                if (isInLibrary) {
+                    OutlinedButton(
+                        onClick = onToggleLibrary,
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Text("➖ Remove from Library", style = MaterialTheme.typography.labelSmall)
+                    }
+                } else {
+                    FilledTonalButton(
+                        onClick = onToggleLibrary,
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Text("➕ Add to Library", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
         }

@@ -75,6 +75,8 @@ class AnimeRepositoryImpl @Inject constructor(
 
     override fun getReleasingLibrary(): Flow<List<LocalAnime>> = dao.getReleasingAnime()
 
+    override fun getWatchingLibrary(): Flow<List<LocalAnime>> = dao.getWatchingAnime()
+
     override suspend fun getAnimeById(id: Int): LocalAnime? = dao.getAnimeById(id)
 
     override suspend fun updateAiringInfo(id: Int, nextAiringTime: Long?, nextEpisode: Int?) =

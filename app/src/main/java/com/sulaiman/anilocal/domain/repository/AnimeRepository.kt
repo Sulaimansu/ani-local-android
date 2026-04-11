@@ -18,6 +18,7 @@ interface AnimeRepository {
     fun getLibrary(): Flow<List<LocalAnime>>
     fun getLibraryByStatus(status: String): Flow<List<LocalAnime>>
     fun getReleasingLibrary(): Flow<List<LocalAnime>>
+    fun getWatchingLibrary(): Flow<List<LocalAnime>>
     suspend fun getAnimeById(id: Int): LocalAnime?
     suspend fun updateAiringInfo(id: Int, nextAiringTime: Long?, nextEpisode: Int?)
     suspend fun updateAnimeMetadata(id: Int, status: String?, episodes: Int?, nextAiringTime: Long?, nextEpisode: Int?)

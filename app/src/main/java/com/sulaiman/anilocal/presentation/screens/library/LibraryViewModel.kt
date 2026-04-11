@@ -2,6 +2,7 @@ package com.sulaiman.anilocal.presentation.screens.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sulaiman.anilocal.domain.model.AnimeStatus
 import com.sulaiman.anilocal.domain.model.LocalAnime
 import com.sulaiman.anilocal.domain.repository.AnimeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,7 +13,7 @@ import javax.inject.Inject
 data class LibraryState(
     val allAnime: List<LocalAnime> = emptyList(),
     val filteredAnime: List<LocalAnime> = emptyList(),
-    val currentFilter: String? = null,
+    val currentFilter: AnimeStatus? = null,
     val isLoading: Boolean = false
 )
 
@@ -30,14 +31,15 @@ class LibraryViewModel @Inject constructor(
     private fun loadLibrary() {
         repository.getLibrary()
             .onEach { list ->
+                val sorted = list.sortedBy { it.titleRomaji.lowercase() }
                 _state.update {
                     val filtered = if (it.currentFilter == null) {
-                        list
+                        sorted
                     } else {
-                        list.filter { a -> a.mediaStatus == it.currentFilter }
+                        sorted.filter { a -> a.status == it.currentFilter }
                     }
                     it.copy(
-                        allAnime = list,
+                        allAnime = sorted,
                         filteredAnime = filtered,
                         isLoading = false
                     )
@@ -46,14 +48,20 @@ class LibraryViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun setFilter(status: String?) {
+    fun setFilter(status: AnimeStatus?) {
         _state.update {
             val filtered = if (status == null) {
                 it.allAnime
             } else {
-                it.allAnime.filter { a -> a.mediaStatus == status }
+                it.allAnime.filter { a -> a.status == status }
             }
             it.copy(currentFilter = status, filteredAnime = filtered)
+        }
+    }
+
+    fun deleteAnime(id: Int) {
+        viewModelScope.launch {
+            repository.deleteAnime(id)
         }
     }
 

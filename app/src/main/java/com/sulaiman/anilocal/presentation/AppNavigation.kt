@@ -17,11 +17,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.sulaiman.anilocal.presentation.screens.airing.AiringScreen
 import com.sulaiman.anilocal.presentation.screens.library.LibraryScreen
+import com.sulaiman.anilocal.presentation.screens.releasing.ReleasingScreen
 import com.sulaiman.anilocal.presentation.screens.search.SearchScreen
 import com.sulaiman.anilocal.presentation.screens.detail.AnimeDetailScreen
 
 private val bottomNavRoutes = listOf(
     NavRoute("library", "Library", "📚"),
+    NavRoute("releasing", "Releasing", "🔴"),
     NavRoute("search", "Search", "🔍"),
     NavRoute("airing", "Airing", "📺")
 )
@@ -68,6 +70,13 @@ fun AppNavigation() {
         ) {
             composable("library") {
                 LibraryScreen(
+                    onNavigateToDetail = { animeId ->
+                        navController.navigate("detail/$animeId")
+                    }
+                )
+            }
+            composable("releasing") {
+                ReleasingScreen(
                     onNavigateToDetail = { animeId ->
                         navController.navigate("detail/$animeId")
                     }

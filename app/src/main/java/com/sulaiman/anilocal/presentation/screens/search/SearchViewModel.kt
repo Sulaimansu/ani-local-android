@@ -16,6 +16,7 @@ import javax.inject.Inject
 data class SearchState(
     val query: String = "",
     val results: List<LocalAnime> = emptyList(),
+    val libraryIds: Set<Int> = emptySet(),
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -29,16 +30,29 @@ class SearchViewModel @Inject constructor(
 
     private var searchJob: Job? = null
 
+    init {
+        loadLibraryIds()
+    }
+
+    private fun loadLibraryIds() {
+        viewModelScope.launch {
+            repository.getLibrary().collect { list ->
+                _state.update { it.copy(libraryIds = list.map { a -> a.id }.toSet()) }
+            }
+        }
+    }
+
     fun onQueryChange(query: String) {
         _state.update { it.copy(query = query) }
         searchJob?.cancel()
         if (query.length > 2) {
             searchJob = viewModelScope.launch {
-                delay(300) // debounce
+                delay(300)
                 search(query)
             }
         } else {
-            _state.update { it.copy(results = emptyList()) }
+            // Don't clear results - keep cached
+            _state.update { it.copy(results = it.results) }
         }
     }
 
@@ -58,6 +72,14 @@ class SearchViewModel @Inject constructor(
     fun saveAnime(anime: LocalAnime) {
         viewModelScope.launch {
             repository.saveAnime(anime)
+            _state.update { it.copy(libraryIds = it.libraryIds + anime.id) }
+        }
+    }
+
+    fun removeFromLibrary(id: Int) {
+        viewModelScope.launch {
+            repository.deleteAnime(id)
+            _state.update { it.copy(libraryIds = it.libraryIds - id) }
         }
     }
 }

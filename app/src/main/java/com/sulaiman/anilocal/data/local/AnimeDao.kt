@@ -20,14 +20,17 @@ interface AnimeDao {
     @Query("SELECT * FROM local_anime WHERE id = :id")
     suspend fun getAnimeById(id: Int): LocalAnime?
 
-    @Query("SELECT * FROM local_anime ORDER BY addedAt DESC")
+    @Query("SELECT * FROM local_anime ORDER BY titleRomaji ASC")
     fun getAllAnime(): Flow<List<LocalAnime>>
 
-    @Query("SELECT * FROM local_anime WHERE mediaStatus = :status ORDER BY addedAt DESC")
+    @Query("SELECT * FROM local_anime WHERE status = :status ORDER BY titleRomaji ASC")
     fun getAnimeByStatus(status: String): Flow<List<LocalAnime>>
 
     @Query("SELECT * FROM local_anime WHERE mediaStatus IN ('RELEASING', 'NOT_YET_RELEASED') ORDER BY nextAiringTime ASC")
     fun getReleasingAnime(): Flow<List<LocalAnime>>
+
+    @Query("SELECT * FROM local_anime WHERE status = 'WATCHING' AND mediaStatus != 'FINISHED' ORDER BY nextAiringTime ASC")
+    fun getWatchingAnime(): Flow<List<LocalAnime>>
 
     @Delete
     suspend fun deleteAnime(anime: LocalAnime)

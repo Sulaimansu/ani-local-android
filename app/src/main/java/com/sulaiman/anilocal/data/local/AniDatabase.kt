@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.sulaiman.anilocal.domain.model.LocalAnime
 
-@Database(entities = [LocalAnime::class], version = 1, exportSchema = false)
+@Database(entities = [LocalAnime::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AniDatabase : RoomDatabase() {
     abstract fun animeDao(): AnimeDao

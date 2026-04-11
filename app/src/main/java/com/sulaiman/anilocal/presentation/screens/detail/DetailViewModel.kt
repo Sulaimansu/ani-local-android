@@ -77,6 +77,16 @@ class DetailViewModel @Inject constructor(
         }
     }
 
+    fun removeFromLibrary() {
+        val currentAnime = _state.value.anime ?: return
+        viewModelScope.launch {
+            repository.deleteAnime(currentAnime.id)
+            _state.update {
+                it.copy(isInLibrary = false, userStatus = null)
+            }
+        }
+    }
+
     fun updateUserStatus(status: AnimeStatus) {
         val currentAnime = _state.value.anime ?: return
         viewModelScope.launch {

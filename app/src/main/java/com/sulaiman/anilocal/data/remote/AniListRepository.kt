@@ -162,9 +162,8 @@ class AniListRepository @Inject constructor(
                 return@flow
             }
 
-            val airingData = data.airingSchedules
-            val scheduleList = airingData?.nodes ?: emptyList()
-            val nonNullSchedules = scheduleList.filterNotNull()
+            val airingList: List<GetAiringScheduleQuery.AiringSchedule?> = data.page?.airingSchedules ?: emptyList()
+            val nonNullSchedules = airingList.filterNotNull()
             val mapped = nonNullSchedules.map { s ->
                 val m = s.media
                 AiringAnime(
