@@ -1,5 +1,6 @@
 package com.sulaiman.anilocal.domain.repository
 
+import android.content.Context
 import com.sulaiman.anilocal.domain.model.AiringAnime
 import com.sulaiman.anilocal.domain.model.LocalAnime
 import kotlinx.coroutines.flow.Flow
@@ -12,7 +13,7 @@ interface AnimeRepository {
     suspend fun getAiringScheduleForAnimeIds(animeIds: List<Int>): Result<List<AiringAnime>>
 
     // Local operations
-    suspend fun saveAnime(anime: LocalAnime)
+    suspend fun saveAnime(anime: LocalAnime, context: Context? = null)
     suspend fun updateAnime(anime: LocalAnime)
     suspend fun deleteAnime(id: Int)
     fun getLibrary(): Flow<List<LocalAnime>>

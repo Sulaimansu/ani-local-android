@@ -18,7 +18,6 @@ import coil.compose.AsyncImage
 import com.sulaiman.anilocal.R
 import com.sulaiman.anilocal.domain.model.AnimeFormat
 import com.sulaiman.anilocal.domain.model.AnimeStatus
-import com.sulaiman.anilocal.presentation.components.RandomAnimeBanner
 import com.sulaiman.anilocal.presentation.ui.theme.AniBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,16 +29,6 @@ fun LibraryScreen(
     val state by viewModel.state.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        RandomAnimeBanner()
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("📚 Library", style = MaterialTheme.typography.titleLarge)
-        }
 
         FilterChipsRow(
             currentFilter = state.currentFilter,

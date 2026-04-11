@@ -1,13 +1,11 @@
 package com.sulaiman.anilocal.presentation
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -15,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.sulaiman.anilocal.presentation.components.AppHeader
 import com.sulaiman.anilocal.presentation.screens.airing.AiringScreen
 import com.sulaiman.anilocal.presentation.screens.library.LibraryScreen
 import com.sulaiman.anilocal.presentation.screens.releasing.ReleasingScreen
@@ -36,7 +35,14 @@ fun AppNavigation() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    var currentTabTitle by remember { mutableStateOf("Library") }
+    LaunchedEffect(currentRoute) {
+        val nav = bottomNavRoutes.find { it.route == currentRoute }
+        if (nav != null) currentTabTitle = nav.title
+    }
+
     val showBottomBar = currentRoute != null && currentRoute in bottomNavRoutes.map { it.route }
+    val showHeader = showBottomBar
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -63,11 +69,15 @@ fun AppNavigation() {
             }
         }
     ) { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = "library",
-            modifier = Modifier.padding(padding)
-        ) {
+        Column(modifier = Modifier.padding(padding)) {
+            if (showHeader) {
+                AppHeader(title = currentTabTitle)
+            }
+            NavHost(
+                navController = navController,
+                startDestination = "library",
+                modifier = Modifier.fillMaxSize()
+            ) {
             composable("library") {
                 LibraryScreen(
                     onNavigateToDetail = { animeId ->

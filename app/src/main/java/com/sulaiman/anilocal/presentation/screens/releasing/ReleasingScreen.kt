@@ -16,8 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.sulaiman.anilocal.R
-import com.sulaiman.anilocal.domain.model.AnimeStatus
-import com.sulaiman.anilocal.presentation.components.RandomAnimeBanner
 import com.sulaiman.anilocal.presentation.ui.theme.AniBlue
 import java.util.concurrent.TimeUnit
 
@@ -34,16 +32,6 @@ fun ReleasingScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        RandomAnimeBanner()
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("🟢 Releasing", style = MaterialTheme.typography.titleLarge)
-        }
 
         if (state.anime.isEmpty() && !state.isLoading) {
             Box(

@@ -1,10 +1,12 @@
 package com.sulaiman.anilocal.presentation.screens.search
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sulaiman.anilocal.domain.model.LocalAnime
 import com.sulaiman.anilocal.domain.repository.AnimeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +25,8 @@ data class SearchState(
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val repository: AnimeRepository
+    private val repository: AnimeRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     private val _state = MutableStateFlow(SearchState())
     val state = _state.asStateFlow()
@@ -71,7 +74,7 @@ class SearchViewModel @Inject constructor(
 
     fun saveAnime(anime: LocalAnime) {
         viewModelScope.launch {
-            repository.saveAnime(anime)
+            repository.saveAnime(anime, context)
             _state.update { it.copy(libraryIds = it.libraryIds + anime.id) }
         }
     }

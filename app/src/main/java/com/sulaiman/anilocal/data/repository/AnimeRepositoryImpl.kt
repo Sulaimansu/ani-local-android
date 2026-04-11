@@ -1,12 +1,15 @@
 package com.sulaiman.anilocal.data.repository
 
+import android.content.Context
 import com.apollographql.apollo.ApolloClient
 import com.sulaiman.anilocal.data.local.AnimeDao
 import com.sulaiman.anilocal.data.remote.AniListRepository
 import com.sulaiman.anilocal.domain.model.AiringAnime
 import com.sulaiman.anilocal.domain.model.LocalAnime
 import com.sulaiman.anilocal.domain.repository.AnimeRepository
+import com.sulaiman.anilocal.util.ImageDownloader
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class AnimeRepositoryImpl @Inject constructor(
@@ -63,7 +66,20 @@ class AnimeRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveAnime(anime: LocalAnime) = dao.insertAnime(anime)
+    override suspend fun saveAnime(anime: LocalAnime, context: Context?) {
+        dao.insertAnime(anime)
+        // Download and save images permanently
+        if (context != null) {
+            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                anime.coverImage?.let { url ->
+                    ImageDownloader.downloadAndSave(url, ImageDownloader.getPosterPath(context, anime.id))
+                }
+                anime.bannerImage?.let { url ->
+                    ImageDownloader.downloadAndSave(url, ImageDownloader.getBannerPath(context, anime.id))
+                }
+            }
+        }
+    }
 
     override suspend fun updateAnime(anime: LocalAnime) = dao.updateAnime(anime)
 
