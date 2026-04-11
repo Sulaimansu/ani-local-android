@@ -169,7 +169,7 @@ class AniListRepository @Inject constructor(
                 return@flow
             }
 
-            val airingData: List<GetAiringScheduleQuery.AiringSchedule?> = pageData.airingSchedules
+            val airingData: List<GetAiringScheduleQuery.AiringSchedule?>? = pageData.airingSchedules
             if (airingData == null || airingData.isEmpty()) {
                 emit(Result.failure(Exception("No airing schedules returned")))
                 return@flow
