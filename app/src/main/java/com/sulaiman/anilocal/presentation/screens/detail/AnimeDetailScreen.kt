@@ -72,8 +72,8 @@ fun AnimeDetailScreen(
                     isInLibrary = state.isInLibrary,
                     userStatus = state.userStatus,
                     countdownText = state.countdownText,
-                    onSaveToLibrary = { viewModel.saveToLibrary() },
-                    onRemoveFromLibrary = { viewModel.removeFromLibrary() },
+                    onSaveToLibrary = { viewModel.toggleLibrary() },
+                    onRemoveFromLibrary = { viewModel.toggleLibrary() },
                     onUpdateStatus = { viewModel.updateUserStatus(it) },
                     onNavigateToRelated = onNavigateToRelated,
                     modifier = Modifier
@@ -91,8 +91,7 @@ fun DetailContent(
     isInLibrary: Boolean,
     userStatus: com.sulaiman.anilocal.domain.model.AnimeStatus?,
     countdownText: String?,
-    onSaveToLibrary: () -> Unit,
-    onRemoveFromLibrary: () -> Unit,
+    onToggleLibrary: () -> Unit,
     onUpdateStatus: (com.sulaiman.anilocal.domain.model.AnimeStatus) -> Unit,
     onNavigateToRelated: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -186,39 +185,15 @@ fun DetailContent(
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            if (!isInLibrary) {
-                Button(
-                    onClick = onSaveToLibrary,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("➕ Add to Library")
-                }
-            } else {
-                OutlinedButton(
-                    onClick = { /* Placeholder - remove button is below */ },
-                    modifier = Modifier.weight(1f),
-                    enabled = false
-                ) {
-                    Text("✓ In Library")
-                }
-            }
-            anime.siteUrl?.let { url ->
-                OutlinedButton(onClick = { /* Open URL - would need Activity context */ }) {
-                    Text("🔗 AniList")
-                }
-            }
-        }
-
-        // Remove button (if in library)
-        if (isInLibrary) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.End
+            Button(
+                onClick = onToggleLibrary,
+                modifier = Modifier.weight(1f)
             ) {
-                TextButton(onClick = { onRemoveFromLibrary() }) {
-                    Text("🗑 Remove from Library", color = MaterialTheme.colorScheme.error)
+                Text(if (isInLibrary) "🗑 Remove from Library" else "➕ Add to Library")
+            }
+            anime.siteUrl?.let { _ ->
+                OutlinedButton(onClick = { }) {
+                    Text("🔗")
                 }
             }
         }
@@ -394,16 +369,22 @@ fun UserStatusSelector(
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             com.sulaiman.anilocal.domain.model.AnimeStatus.values().forEach { status ->
                 FilterChip(
                     selected = currentStatus == status,
                     onClick = { onStatusChange(status) },
-                    label = { Text(status.name.take(1), style = MaterialTheme.typography.labelSmall) },
-                    modifier = Modifier.weight(1f)
+                    label = {
+                        val label = when (status) {
+                            com.sulaiman.anilocal.domain.model.AnimeStatus.WATCHING -> "Watching"
+                            com.sulaiman.anilocal.domain.model.AnimeStatus.COMPLETED -> "Completed"
+                            com.sulaiman.anilocal.domain.model.AnimeStatus.PLANNING -> "Planning"
+                            com.sulaiman.anilocal.domain.model.AnimeStatus.DROPPED -> "Dropped"
+                            com.sulaiman.anilocal.domain.model.AnimeStatus.PAUSED -> "Paused"
+                        }
+                        Text(label, style = MaterialTheme.typography.labelMedium)
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

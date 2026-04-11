@@ -29,4 +29,13 @@ class ReleasingViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
     }
+
+    fun refresh() {
+        repository.getReleasingLibrary()
+            .onEach { list ->
+                val sorted = list.sortedBy { it.titleRomaji.lowercase() }
+                _state.update { it.copy(anime = sorted, isLoading = false) }
+            }
+            .launchIn(viewModelScope)
+    }
 }

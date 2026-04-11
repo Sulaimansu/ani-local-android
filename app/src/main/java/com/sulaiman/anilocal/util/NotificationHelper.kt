@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -15,21 +16,21 @@ import com.sulaiman.anilocal.presentation.MainActivity
 
 object NotificationHelper {
     private const val CHANNEL_ID = "episode_reminders"
-    private const val CHANNEL_NAME = "Episode Reminders"
     private const val NOTIFICATION_ID_BASE = 1000
 
     fun createNotificationChannel(context: Context) {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            CHANNEL_NAME,
-            NotificationManager.IMPORTANCE_HIGH
-        ).apply {
-            description = "Get notified when episodes are about to air"
-            enableVibration(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Episode Reminders",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Get notified when episodes are about to air"
+                enableVibration(true)
+            }
+            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            nm.createNotificationChannel(channel)
         }
-
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(channel)
     }
 
     fun showEpisodeNotification(
@@ -37,7 +38,6 @@ object NotificationHelper {
         animeId: Int,
         animeTitle: String,
         episodeNumber: Int,
-        minutesUntilAiring: Int,
         isImmediate: Boolean = false
     ) {
         createNotificationChannel(context)
@@ -54,32 +54,26 @@ object NotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val title = if (isImmediate) {
-            context.getString(R.string.notification_ep_now, episodeNumber)
-        } else {
-            context.getString(R.string.notification_title)
-        }
-
+        val title = if (isImmediate) "🔴 Airing Now!" else "⏰ Episode Airing Soon!"
         val body = if (isImmediate) {
-            context.getString(R.string.notification_ep_now, episodeNumber) + " - $animeTitle"
+            "$animeTitle - Episode $episodeNumber"
         } else {
-            context.getString(R.string.notification_body, animeTitle, episodeNumber)
+            "$animeTitle - Episode $episodeNumber airs in less than 10 minutes"
         }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setVibrate(longArrayOf(0, 250, 250, 250))
             .build()
 
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         ) {
             NotificationManagerCompat.from(context)
                 .notify(NOTIFICATION_ID_BASE + animeId, notification)

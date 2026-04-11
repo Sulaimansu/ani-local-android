@@ -87,6 +87,14 @@ class DetailViewModel @Inject constructor(
         }
     }
 
+    fun toggleLibrary() {
+        if (_state.value.isInLibrary) {
+            removeFromLibrary()
+        } else {
+            saveToLibrary()
+        }
+    }
+
     fun updateUserStatus(status: AnimeStatus) {
         val currentAnime = _state.value.anime ?: return
         viewModelScope.launch {

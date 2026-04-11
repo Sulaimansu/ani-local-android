@@ -17,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.sulaiman.anilocal.R
 import com.sulaiman.anilocal.domain.model.AnimeStatus
+import com.sulaiman.anilocal.presentation.components.RandomAnimeBanner
 import com.sulaiman.anilocal.presentation.ui.theme.AniBlue
 import java.util.concurrent.TimeUnit
 
@@ -28,14 +29,21 @@ fun ReleasingScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("🔴 Releasing") },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                titleContentColor = MaterialTheme.colorScheme.onSurface
-            )
-        )
+        RandomAnimeBanner()
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("🟢 Releasing", style = MaterialTheme.typography.titleLarge)
+        }
 
         if (state.anime.isEmpty() && !state.isLoading) {
             Box(

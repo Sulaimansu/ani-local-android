@@ -5,6 +5,7 @@ schema {
 type Query {
   Page(page: Int, perPage: Int): Page
   Media(id: Int, search: String, type: MediaType): Media
+  AiringSchedule(id: Int, mediaId: Int, episode: Int, airingAt: Int, airingAt_greater: Int, airingAt_lesser: Int, notYetAired: Boolean, sort: [AiringSort]): AiringScheduleConnection
 }
 
 enum AiringSort {
@@ -20,6 +21,15 @@ type Page {
   pageInfo: PageInfo
   media(id: Int, type: MediaType, search: String, status_in: [MediaStatus], sort: [MediaSort], season: MediaSeason, seasonYear: Int): [Media]
   airingSchedules(airingAt_greater: Int, airingAt_lesser: Int, sort: [AiringSort], perPage: Int): [AiringSchedule]
+}
+
+enum MediaSort {
+  POPULARITY_DESC
+  TRENDING_DESC
+  TITLE_ROMAJI
+  TITLE_ENGLISH
+  SCORE_DESC
+  UPDATED_AT_DESC
 }
 
 type PageInfo {
@@ -246,6 +256,11 @@ type AiringSchedule {
   airingAt: Int
   timeUntilAiring: Int
   media: Media
+}
+
+type AiringScheduleConnection {
+  nodes: [AiringSchedule]
+  pageInfo: PageInfo
 }
 
 type FuzzyDate {

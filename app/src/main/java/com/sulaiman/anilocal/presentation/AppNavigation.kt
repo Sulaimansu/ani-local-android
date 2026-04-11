@@ -23,7 +23,7 @@ import com.sulaiman.anilocal.presentation.screens.detail.AnimeDetailScreen
 
 private val bottomNavRoutes = listOf(
     NavRoute("library", "Library", "📚"),
-    NavRoute("releasing", "Releasing", "🔴"),
+    NavRoute("releasing", "Releasing", "🟢"),
     NavRoute("search", "Search", "🔍"),
     NavRoute("airing", "Airing", "📺")
 )
