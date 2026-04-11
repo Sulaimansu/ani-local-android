@@ -69,13 +69,11 @@ class AiringSyncWorker @AssistedInject constructor(
 
                         // Check if episode is airing soon (<10 min)
                         if (newNextAiringTime != null && newNextAiringTime <= notificationThreshold && newNextAiringTime > now) {
-                            val minutesUntil = ((newNextAiringTime - now) / 60000).toInt()
                             NotificationHelper.showEpisodeNotification(
                                 context = applicationContext,
                                 animeId = anime.id,
                                 animeTitle = anime.titleRomaji,
-                                episodeNumber = newNextEpisode ?: 0,
-                                minutesUntilAiring = minutesUntil
+                                episodeNumber = newNextEpisode ?: 0
                             )
                             notificationCount++
                         }
@@ -87,7 +85,6 @@ class AiringSyncWorker @AssistedInject constructor(
                                 animeId = anime.id,
                                 animeTitle = anime.titleRomaji,
                                 episodeNumber = newNextEpisode ?: 0,
-                                minutesUntilAiring = 0,
                                 isImmediate = true
                             )
                         }

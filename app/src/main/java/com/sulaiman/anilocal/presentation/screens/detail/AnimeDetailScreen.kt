@@ -72,8 +72,7 @@ fun AnimeDetailScreen(
                     isInLibrary = state.isInLibrary,
                     userStatus = state.userStatus,
                     countdownText = state.countdownText,
-                    onSaveToLibrary = { viewModel.toggleLibrary() },
-                    onRemoveFromLibrary = { viewModel.toggleLibrary() },
+                    onToggleLibrary = { viewModel.toggleLibrary() },
                     onUpdateStatus = { viewModel.updateUserStatus(it) },
                     onNavigateToRelated = onNavigateToRelated,
                     modifier = Modifier
