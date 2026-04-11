@@ -19,6 +19,7 @@ import com.sulaiman.anilocal.R
 import com.sulaiman.anilocal.domain.model.AnimeFormat
 import com.sulaiman.anilocal.domain.model.AnimeStatus
 import com.sulaiman.anilocal.presentation.ui.theme.AniBlue
+import com.sulaiman.anilocal.util.ImageLoaderUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +28,7 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -109,7 +111,7 @@ fun LibraryGridItem(
     ) {
         Column {
             AsyncImage(
-                model = anime.coverImage,
+                model = ImageLoaderUtil.getPosterData(context, anime.id, anime.coverImage),
                 contentDescription = anime.titleRomaji,
                 modifier = Modifier
                     .fillMaxWidth()

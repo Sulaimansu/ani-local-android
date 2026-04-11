@@ -16,6 +16,7 @@ import coil.compose.AsyncImage
 import com.sulaiman.anilocal.R
 import com.sulaiman.anilocal.domain.model.LocalAnime
 import com.sulaiman.anilocal.presentation.ui.theme.AniBlue
+import com.sulaiman.anilocal.util.ImageLoaderUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,6 +26,7 @@ fun SearchScreen(
 ) {
     val state by viewModel.state.collectAsState()
     var query by remember { mutableStateOf("") }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
@@ -127,7 +129,7 @@ fun SearchResultItem(
                 .padding(12.dp)
         ) {
             AsyncImage(
-                model = anime.coverImage,
+                model = ImageLoaderUtil.getPosterData(context, anime.id, anime.coverImage),
                 contentDescription = anime.titleRomaji,
                 modifier = Modifier
                     .size(80.dp)

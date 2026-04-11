@@ -28,11 +28,11 @@ class AiringViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
 
+            // Get next 24 hours from now
             val now = (System.currentTimeMillis() / 1000).toInt()
-            val startOfDay = now - (now % 86400)
-            val endOfDay = startOfDay + 86400
+            val endOfDay = now + 86400
 
-            repository.getAiringToday(startOfDay, endOfDay).collect { result ->
+            repository.getAiringToday(now, endOfDay).collect { result ->
                 result.onSuccess { list ->
                     _state.update {
                         it.copy(

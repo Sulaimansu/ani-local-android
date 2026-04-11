@@ -16,6 +16,7 @@ import coil.compose.AsyncImage
 import com.sulaiman.anilocal.domain.model.AnimeFormat
 import com.sulaiman.anilocal.domain.model.AnimeSeason
 import com.sulaiman.anilocal.presentation.ui.theme.AniBlue
+import com.sulaiman.anilocal.util.ImageLoaderUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,6 +27,7 @@ fun AnimeDetailScreen(
     viewModel: DetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(animeId) {
         viewModel.loadAnimeDetails(animeId)
@@ -68,6 +70,7 @@ fun AnimeDetailScreen(
 
             else -> {
                 DetailContent(
+                    context = context,
                     anime = state.anime!!,
                     isInLibrary = state.isInLibrary,
                     userStatus = state.userStatus,
@@ -86,6 +89,7 @@ fun AnimeDetailScreen(
 
 @Composable
 fun DetailContent(
+    context: android.content.Context,
     anime: com.sulaiman.anilocal.domain.model.LocalAnime,
     isInLibrary: Boolean,
     userStatus: com.sulaiman.anilocal.domain.model.AnimeStatus?,
@@ -103,7 +107,7 @@ fun DetailContent(
         // Banner
         anime.bannerImage?.let { banner ->
             AsyncImage(
-                model = banner,
+                model = ImageLoaderUtil.getBannerData(context, anime.id, banner),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -118,7 +122,7 @@ fun DetailContent(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             AsyncImage(
-                model = anime.coverImage,
+                model = ImageLoaderUtil.getPosterData(context, anime.id, anime.coverImage),
                 contentDescription = anime.titleRomaji,
                 modifier = Modifier
                     .size(120.dp)

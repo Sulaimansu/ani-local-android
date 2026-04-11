@@ -47,7 +47,7 @@ fun AppHeader(
         val source = if (banners.isNotEmpty()) banners else fallbackBanners
         bannerUrl = source.random()
         while (true) {
-            delay(14000)
+            delay(9000)
             alpha = 0f
             delay(500)
             bannerUrl = source.random()

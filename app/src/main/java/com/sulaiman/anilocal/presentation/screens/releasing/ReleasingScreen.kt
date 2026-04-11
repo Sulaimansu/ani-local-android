@@ -17,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.sulaiman.anilocal.R
 import com.sulaiman.anilocal.presentation.ui.theme.AniBlue
+import com.sulaiman.anilocal.util.ImageLoaderUtil
 import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,6 +27,7 @@ fun ReleasingScreen(
     viewModel: ReleasingViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
@@ -76,7 +78,7 @@ fun ReleasingGridItem(
     ) {
         Column {
             AsyncImage(
-                model = anime.coverImage,
+                model = ImageLoaderUtil.getPosterData(context, anime.id, anime.coverImage),
                 contentDescription = anime.titleRomaji,
                 modifier = Modifier
                     .fillMaxWidth()

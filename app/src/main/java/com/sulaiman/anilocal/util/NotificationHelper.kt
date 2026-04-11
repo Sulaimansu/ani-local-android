@@ -1,9 +1,11 @@
 package com.sulaiman.anilocal.util
 
 import android.Manifest
+import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,7 +20,7 @@ object NotificationHelper {
     private const val CHANNEL_ID = "episode_reminders"
     private const val NOTIFICATION_ID_BASE = 1000
 
-    fun createNotificationChannel(context: Context): Boolean {
+    fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
@@ -32,9 +34,7 @@ object NotificationHelper {
             }
             val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             nm.createNotificationChannel(channel)
-            return true
         }
-        return false
     }
 
     fun showEpisodeNotification(
@@ -44,7 +44,6 @@ object NotificationHelper {
         episodeNumber: Int,
         isImmediate: Boolean = false
     ) {
-        // Always create channel (idempotent)
         createNotificationChannel(context)
 
         val intent = Intent(context, MainActivity::class.java).apply {
@@ -59,12 +58,12 @@ object NotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val title = if (isImmediate) "🔴 Airing Now!" else "⏰ Episode Airing Soon!"
-        val body = if (isImmediate) {
-            "$animeTitle - Episode $episodeNumber is airing now!"
+        val title = if (isImmediate) {
+            context.getString(R.string.notification_title)
         } else {
-            "$animeTitle - Episode $episodeNumber airs in less than 10 minutes"
+            context.getString(R.string.notification_title)
         }
+        val body = "$animeTitle - Episode $episodeNumber"
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -93,5 +92,59 @@ object NotificationHelper {
 
     fun cancelEpisodeNotification(context: Context, animeId: Int) {
         NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID_BASE + animeId)
+    }
+
+    /**
+     * Schedule a notification for a specific time using AlarmManager.
+     * This fires when the episode countdown reaches 0 (or <10 min before).
+     */
+    fun scheduleAiringNotification(context: Context, animeId: Int, animeTitle: String, episodeNumber: Int, airingAtMs: Long) {
+        val intent = Intent(context, AiringAlarmReceiver::class.java).apply {
+            putExtra("animeId", animeId)
+            putExtra("animeTitle", animeTitle)
+            putExtra("episodeNumber", episodeNumber)
+        }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            animeId,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val triggerAtMs = airingAtMs - (10 * 60 * 1000) // 10 minutes before
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMs,
+                pendingIntent
+            )
+        } else {
+            alarmManager.setExact(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMs,
+                pendingIntent
+            )
+        }
+    }
+}
+
+/**
+ * BroadcastReceiver that fires when an anime episode is about to air.
+ */
+class AiringAlarmReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val animeId = intent.getIntExtra("animeId", 0)
+        val animeTitle = intent.getStringExtra("animeTitle") ?: ""
+        val episodeNumber = intent.getIntExtra("episodeNumber", 0)
+
+        NotificationHelper.showEpisodeNotification(
+            context = context,
+            animeId = animeId,
+            animeTitle = animeTitle,
+            episodeNumber = episodeNumber
+        )
     }
 }

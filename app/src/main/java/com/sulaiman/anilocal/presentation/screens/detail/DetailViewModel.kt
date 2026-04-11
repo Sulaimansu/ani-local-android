@@ -1,11 +1,14 @@
 package com.sulaiman.anilocal.presentation.screens.detail
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sulaiman.anilocal.domain.model.AnimeStatus
 import com.sulaiman.anilocal.domain.model.LocalAnime
 import com.sulaiman.anilocal.domain.repository.AnimeRepository
+import com.sulaiman.anilocal.util.NotificationHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +28,8 @@ data class DetailState(
 
 @HiltViewModel
 class DetailViewModel @Inject constructor(
-    private val repository: AnimeRepository
+    private val repository: AnimeRepository,
+    @ApplicationContext private val context: android.content.Context
 ) : ViewModel() {
     private val _state = MutableStateFlow(DetailState())
     val state = _state.asStateFlow()
@@ -70,7 +74,7 @@ class DetailViewModel @Inject constructor(
     fun saveToLibrary() {
         val currentAnime = _state.value.anime ?: return
         viewModelScope.launch {
-            repository.saveAnime(currentAnime)
+            repository.saveAnime(currentAnime, context)
             _state.update {
                 it.copy(isInLibrary = true, userStatus = AnimeStatus.PLANNING)
             }
@@ -114,11 +118,38 @@ class DetailViewModel @Inject constructor(
             return
         }
 
+        // Schedule notification for 10 min before airing
+        val airingAtMs = anime.nextAiringTime!!
+        val now = System.currentTimeMillis()
+        if (airingAtMs > now + 600000) { // more than 10 min away
+            try {
+                NotificationHelper.scheduleAiringNotification(
+                    context = context,
+                    animeId = anime.id,
+                    animeTitle = anime.titleRomaji,
+                    episodeNumber = anime.nextEpisode ?: 0,
+                    airingAtMs = airingAtMs
+                )
+            } catch (e: Exception) {
+                // Alarm permission not granted, skip
+            }
+        }
+
         countdownJob = viewModelScope.launch {
             while (true) {
                 val remaining = (anime.nextAiringTime!! - System.currentTimeMillis()) / 1000
                 if (remaining <= 0) {
-                    _state.update { it.copy(countdownText = "Airing now!") }
+                    _state.update { it.copy(countdownText = "Episode ${anime.nextEpisode ?: "?"} aired") }
+                    // Show notification now that episode aired
+                    NotificationHelper.showEpisodeNotification(
+                        context = context,
+                        animeId = anime.id,
+                        animeTitle = anime.titleRomaji,
+                        episodeNumber = anime.nextEpisode ?: 0,
+                        isImmediate = true
+                    )
+                    // Refresh from API
+                    refreshFromApi()
                     break
                 }
                 val d = remaining / 86400
@@ -126,10 +157,20 @@ class DetailViewModel @Inject constructor(
                 val m = (remaining % 3600) / 60
                 val s = remaining % 60
                 val text = if (d > 0) "${d}d ${h}h ${m}m"
-                else if (h > 0) "${h}h ${m}m"
+                else if (h > 0) "${h}h ${m}m ${s}s"
                 else "${m}m ${s}s"
                 _state.update { it.copy(countdownText = "Ep ${anime.nextEpisode ?: "?"} in $text") }
                 delay(1000)
+            }
+        }
+    }
+
+    private fun refreshFromApi() {
+        val anime = _state.value.anime ?: return
+        viewModelScope.launch {
+            repository.getAnimeDetails(anime.id).onSuccess { updated ->
+                repository.updateAnime(updated)
+                _state.update { it.copy(anime = updated) }
             }
         }
     }
