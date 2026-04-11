@@ -12,7 +12,8 @@
       "Bash(chmod *)",
       "Bash(file *)",
       "Bash(git *)",
-      "Bash(./gradlew *)"
+      "Bash(./gradlew *)",
+      "Bash(keytool *)"
     ]
   },
   "$version": 3

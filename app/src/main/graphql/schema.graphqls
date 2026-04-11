@@ -46,6 +46,7 @@ enum MediaSort {
   DURATION_DESC
   STATUS
   STATUS_DESC
+  SEARCH_MATCH
 }
 
 enum MediaSeason {

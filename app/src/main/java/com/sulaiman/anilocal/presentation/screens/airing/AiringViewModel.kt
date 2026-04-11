@@ -24,7 +24,11 @@ class AiringViewModel @Inject constructor(
     private val _state = MutableStateFlow(AiringState())
     val state = _state.asStateFlow()
 
+    private var hasLoaded = false
+
     fun loadAiringToday() {
+        if (hasLoaded) return
+        hasLoaded = true
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
 

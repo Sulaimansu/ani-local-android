@@ -22,20 +22,23 @@ class ReleasingViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
+        loadReleasing()
+    }
+
+    private fun loadReleasing() {
         repository.getReleasingLibrary()
             .onEach { list ->
-                val sorted = list.sortedBy { it.titleRomaji.lowercase() }
+                val sorted = list.sortedWith(
+                    compareBy<LocalAnime> { it.nextAiringTime == null }
+                        .thenBy { it.nextAiringTime ?: Long.MAX_VALUE }
+                        .thenBy { it.titleRomaji.lowercase() }
+                )
                 _state.update { it.copy(anime = sorted, isLoading = false) }
             }
             .launchIn(viewModelScope)
     }
 
     fun refresh() {
-        repository.getReleasingLibrary()
-            .onEach { list ->
-                val sorted = list.sortedBy { it.titleRomaji.lowercase() }
-                _state.update { it.copy(anime = sorted, isLoading = false) }
-            }
-            .launchIn(viewModelScope)
+        loadReleasing()
     }
 }

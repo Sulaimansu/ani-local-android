@@ -1,6 +1,6 @@
 query SearchAnime($search: String, $page: Int, $type: MediaType) {
   page: Page(page: $page, perPage: 20) {
-    media(type: $type, search: $search, sort: POPULARITY_DESC) {
+    media(type: $type, search: $search, sort: SEARCH_MATCH) {
       id
       title {
         romaji
