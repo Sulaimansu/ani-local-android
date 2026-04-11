@@ -254,15 +254,6 @@ enum MediaRelation {
   CONTAINS
 }
 
-type AiringSchedule {
-  id: Int
-  mediaId: Int
-  episode: Int
-  airingAt: Int
-  timeUntilAiring: Int
-  media: Media
-}
-
 type FuzzyDate {
   year: Int
   month: Int
