@@ -23,15 +23,6 @@ type Page {
   airingSchedules(airingAt_greater: Int, airingAt_lesser: Int, sort: [AiringSort], perPage: Int): [AiringSchedule]
 }
 
-enum MediaSort {
-  POPULARITY_DESC
-  TRENDING_DESC
-  TITLE_ROMAJI
-  TITLE_ENGLISH
-  SCORE_DESC
-  UPDATED_AT_DESC
-}
-
 type PageInfo {
   total: Int
   perPage: Int
