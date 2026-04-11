@@ -20,20 +20,13 @@ import com.sulaiman.anilocal.presentation.screens.library.LibraryScreen
 import com.sulaiman.anilocal.presentation.screens.search.SearchScreen
 import com.sulaiman.anilocal.presentation.screens.detail.AnimeDetailScreen
 
-sealed class Screen(
-    val route: String,
-    val title: String,
-    val iconText: String
-) {
-    data object Library : Screen("library", "Library", "📚")
-    data object Search : Screen("search", "Search", "🔍")
-    data object Airing : Screen("airing", "Airing", "📺")
-    data object Detail : Screen("detail/{animeId}", "Details", "ℹ️")
+private val bottomNavRoutes = listOf(
+    NavRoute("library", "Library", "📚"),
+    NavRoute("search", "Search", "🔍"),
+    NavRoute("airing", "Airing", "📺")
+)
 
-    companion object {
-        val bottomNavScreens = listOf(Library, Search, Airing)
-    }
-}
+private data class NavRoute(val route: String, val title: String, val iconText: String)
 
 @Composable
 fun AppNavigation() {
@@ -41,24 +34,20 @@ fun AppNavigation() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val showBottomBar = currentRoute in listOf(
-        Screen.Library.route,
-        Screen.Search.route,
-        Screen.Airing.route
-    )
+    val showBottomBar = currentRoute != null && currentRoute in bottomNavRoutes.map { it.route }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar {
-                    Screen.bottomNavScreens.forEach { screen ->
+                    bottomNavRoutes.forEach { route ->
                         NavigationBarItem(
-                            icon = { Text(screen.iconText, fontSize = 20.sp) },
-                            label = { Text(screen.title) },
-                            selected = currentRoute == screen.route,
+                            icon = { Text(route.iconText, fontSize = 20.sp) },
+                            label = { Text(route.title) },
+                            selected = currentRoute == route.route,
                             onClick = {
-                                navController.navigate(screen.route) {
+                                navController.navigate(route.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
                                     }
@@ -74,24 +63,24 @@ fun AppNavigation() {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Library.route,
+            startDestination = "library",
             modifier = Modifier.padding(padding)
         ) {
-            composable(Screen.Library.route) {
+            composable("library") {
                 LibraryScreen(
                     onNavigateToDetail = { animeId ->
                         navController.navigate("detail/$animeId")
                     }
                 )
             }
-            composable(Screen.Search.route) {
+            composable("search") {
                 SearchScreen(
                     onNavigateToDetail = { animeId ->
                         navController.navigate("detail/$animeId")
                     }
                 )
             }
-            composable(Screen.Airing.route) {
+            composable("airing") {
                 AiringScreen(
                     onNavigateToDetail = { animeId ->
                         navController.navigate("detail/$animeId")
