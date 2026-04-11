@@ -18,7 +18,7 @@ object NotificationHelper {
     private const val CHANNEL_ID = "episode_reminders"
     private const val NOTIFICATION_ID_BASE = 1000
 
-    fun createNotificationChannel(context: Context) {
+    fun createNotificationChannel(context: Context): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
@@ -26,11 +26,15 @@ object NotificationHelper {
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Get notified when episodes are about to air"
+                enableLights(true)
                 enableVibration(true)
+                vibrationPattern = longArrayOf(0, 250, 250, 250)
             }
             val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             nm.createNotificationChannel(channel)
+            return true
         }
+        return false
     }
 
     fun showEpisodeNotification(
@@ -40,6 +44,7 @@ object NotificationHelper {
         episodeNumber: Int,
         isImmediate: Boolean = false
     ) {
+        // Always create channel (idempotent)
         createNotificationChannel(context)
 
         val intent = Intent(context, MainActivity::class.java).apply {
@@ -56,7 +61,7 @@ object NotificationHelper {
 
         val title = if (isImmediate) "🔴 Airing Now!" else "⏰ Episode Airing Soon!"
         val body = if (isImmediate) {
-            "$animeTitle - Episode $episodeNumber"
+            "$animeTitle - Episode $episodeNumber is airing now!"
         } else {
             "$animeTitle - Episode $episodeNumber airs in less than 10 minutes"
         }
@@ -66,15 +71,21 @@ object NotificationHelper {
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setVibrate(longArrayOf(0, 250, 250, 250))
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .build()
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+        val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-        ) {
+        } else {
+            true
+        }
+
+        if (hasPermission) {
             NotificationManagerCompat.from(context)
                 .notify(NOTIFICATION_ID_BASE + animeId, notification)
         }
