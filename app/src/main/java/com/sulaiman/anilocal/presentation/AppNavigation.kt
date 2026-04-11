@@ -78,43 +78,44 @@ fun AppNavigation() {
                 startDestination = "library",
                 modifier = Modifier.fillMaxSize()
             ) {
-            composable("library") {
-                LibraryScreen(
-                    onNavigateToDetail = { animeId ->
-                        navController.navigate("detail/$animeId")
-                    }
-                )
-            }
-            composable("releasing") {
-                ReleasingScreen(
-                    onNavigateToDetail = { animeId ->
-                        navController.navigate("detail/$animeId")
-                    }
-                )
-            }
-            composable("search") {
-                SearchScreen(
-                    onNavigateToDetail = { animeId ->
-                        navController.navigate("detail/$animeId")
-                    }
-                )
-            }
-            composable("airing") {
-                AiringScreen(
-                    onNavigateToDetail = { animeId ->
-                        navController.navigate("detail/$animeId")
-                    }
-                )
-            }
-            composable("detail/{animeId}") { backStackEntry ->
-                val animeId = backStackEntry.arguments?.getString("animeId")?.toIntOrNull() ?: 0
-                AnimeDetailScreen(
-                    animeId = animeId,
-                    onNavigateBack = { navController.popBackStack() },
-                    onNavigateToRelated = { relatedId ->
-                        navController.navigate("detail/$relatedId")
-                    }
-                )
+                composable("library") {
+                    LibraryScreen(
+                        onNavigateToDetail = { animeId ->
+                            navController.navigate("detail/$animeId")
+                        }
+                    )
+                }
+                composable("releasing") {
+                    ReleasingScreen(
+                        onNavigateToDetail = { animeId ->
+                            navController.navigate("detail/$animeId")
+                        }
+                    )
+                }
+                composable("search") {
+                    SearchScreen(
+                        onNavigateToDetail = { animeId ->
+                            navController.navigate("detail/$animeId")
+                        }
+                    )
+                }
+                composable("airing") {
+                    AiringScreen(
+                        onNavigateToDetail = { animeId ->
+                            navController.navigate("detail/$animeId")
+                        }
+                    )
+                }
+                composable("detail/{animeId}") { backStackEntry ->
+                    val animeId = backStackEntry.arguments?.getString("animeId")?.toIntOrNull() ?: 0
+                    AnimeDetailScreen(
+                        animeId = animeId,
+                        onNavigateBack = { navController.popBackStack() },
+                        onNavigateToRelated = { relatedId ->
+                            navController.navigate("detail/$relatedId")
+                        }
+                    )
+                }
             }
         }
     }
